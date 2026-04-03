@@ -285,7 +285,8 @@ write_change() {
     10)
         is_new_servername=$3
         if [[ ! $is_reality ]]; then err "($is_config_file) 不支持更改 serverName."; fi
-        if [[ $is_auto ]]; then is_new_servername=$is_random_servername; fi
+        if [[ $is_auto ]]; then is_new_servername=$(domain_pick_for_reality); fi
+        if [[ ! $is_new_servername ]]; then is_new_servername=$is_random_servername; fi
         if [[ ! $is_new_servername ]]; then ask string is_new_servername "请输入新的 serverName"; fi
         is_servername=$is_new_servername
         add $net
@@ -439,7 +440,7 @@ write_add() {
     if [[ $is_no_auto_tls && ! $is_use_tls ]]; then err "$is_new_protocol 不支持手动配置 tls."; fi
 
     if [[ $2 ]]; then
-        for v in is_use_port is_use_uuid is_use_host is_use_path is_use_pass is_use_method is_use_door_addr is_use_door_port; do
+        for v in is_use_port is_use_uuid is_use_host is_use_path is_use_pass is_use_method is_use_door_addr is_use_door_port is_use_servername; do
             if [[ ${!v} == 'auto' ]]; then unset $v; fi
         done
 
@@ -478,10 +479,17 @@ write_add() {
         if [[ $is_use_pass ]]; then ss_password=$is_use_pass; password=$is_use_pass; fi
         if [[ $is_use_host ]]; then host=$is_use_host; fi
         if [[ $is_use_door_addr ]]; then door_addr=$is_use_door_addr; fi
+        if [[ $is_use_servername == '--auto-sni' ]]; then unset is_use_servername; fi
         if [[ $is_use_servername ]]; then is_servername=$is_use_servername; fi
         if [[ $is_use_socks_user ]]; then is_socks_user=$is_use_socks_user; fi
         if [[ $is_use_socks_pass ]]; then is_socks_pass=$is_use_socks_pass; fi
         if [[ $is_use_cf_token ]]; then cf_token=$is_use_cf_token; fi
+    fi
+
+    if [[ $is_reality && ! $is_servername ]]; then
+        is_servername=$(domain_pick_for_reality)
+        if [[ ! $is_servername ]]; then is_servername=$is_random_servername; fi
+        if [[ $is_servername ]]; then msg "Reality 自动选择 serverName: $(_green $is_servername)"; fi
     fi
 
     if [[ $is_use_tls ]]; then

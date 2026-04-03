@@ -85,6 +85,7 @@ query_get() {
         anytls)
             is_protocol=vless
             net=reality
+            if [[ ! $is_servername ]]; then is_servername=$(domain_pick_for_reality); fi
             if [[ ! $is_servername ]]; then is_servername=$is_random_servername; fi
             if [[ ! $is_private_key ]]; then get_pbk; fi
             is_json_add="tls:{enabled:true,server_name:\"$is_servername\",reality:{enabled:true,handshake:{server:\"$is_servername\",server_port:443},private_key:\"$is_private_key\",short_id:[\"\"]}}"
@@ -159,6 +160,7 @@ query_get() {
             ;;
         *reality*)
             net=reality
+            if [[ ! $is_servername ]]; then is_servername=$(domain_pick_for_reality); fi
             if [[ ! $is_servername ]]; then is_servername=$is_random_servername; fi
             if [[ ! $is_private_key ]]; then get_pbk; fi
             is_json_add="tls:{enabled:true,server_name:\"$is_servername\",reality:{enabled:true,handshake:{server:\"$is_servername\",server_port:443},private_key:\"$is_private_key\",short_id:[\"\"]}}"

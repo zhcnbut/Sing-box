@@ -76,14 +76,50 @@ change_list=(
     "更改用户名 (Username)"
 )
 
+servername_pool=(
+    # 格式: domain|weight|region
+    # region: us | eu | apac | global
+    # 科技大厂优先 + 保留原有域名
+    "www.cloudflare.com|12|global"
+    "dash.cloudflare.com|10|global"
+    "www.microsoft.com|10|us"
+    "www.bing.com|9|us"
+    "azure.microsoft.com|8|us"
+    "www.apple.com|10|global"
+    "developer.apple.com|7|global"
+    "www.google.com|10|global"
+    "www.youtube.com|8|global"
+    "www.github.com|8|global"
+    "github.com|8|global"
+    "docs.github.com|6|global"
+    "www.amazon.com|9|us"
+    "aws.amazon.com|8|us"
+    "www.oracle.com|5|us"
+    "www.ibm.com|5|us"
+    "www.ebay.com|4|us"
+    "www.paypal.com|4|us"
+)
+
 servername_list=(
-    www.amazon.com
-    www.ebay.com
-    www.paypal.com
     www.cloudflare.com
     dash.cloudflare.com
+    www.microsoft.com
+    www.bing.com
+    azure.microsoft.com
+    www.apple.com
+    developer.apple.com
+    www.google.com
+    www.youtube.com
+    www.github.com
+    github.com
+    docs.github.com
+    www.amazon.com
     aws.amazon.com
+    www.oracle.com
+    www.ibm.com
+    www.ebay.com
+    www.paypal.com
 )
 
 is_random_ss_method=${ss_method_list[$(shuf -i 4-6 -n1)]}
-is_random_servername=${servername_list[$(shuf -i 0-${#servername_list[@]} -n1) - 1]}
+is_random_servername=${servername_list[$((RANDOM % ${#servername_list[@]}))]}

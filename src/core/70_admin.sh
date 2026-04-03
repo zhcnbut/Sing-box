@@ -200,6 +200,7 @@ admin_main() {
         if [[ $is_del_host ]]; then manage restart caddy & fi
         ;;
     dns) dns_set ${@:2} ;;
+    domain | domains) domain ${@:2} ;;
     cron) cron_task ;;
     sub) gen_sub ;;
     all) show_all_nodes ;;

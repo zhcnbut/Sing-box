@@ -10,6 +10,8 @@ This folder contains the refactored core modules for the Sing-box-EV script.
   - UI helpers (`msg`, `pause`, list rendering, footer).
 - `20_validate.sh`
   - Input and port validation helpers.
+- `25_domain.sh`
+  - Reality domain pool management, health checks, weighted selection.
 - `30_runtime.sh`
   - Runtime/service operations (`manage`, `cron` workflow).
 - `40_node_query.sh`

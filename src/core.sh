@@ -5,6 +5,7 @@
 . "$is_sh_dir/src/core/00_env.sh"
 . "$is_sh_dir/src/core/10_ui.sh"
 . "$is_sh_dir/src/core/20_validate.sh"
+. "$is_sh_dir/src/core/25_domain.sh"
 . "$is_sh_dir/src/core/30_runtime.sh"
 . "$is_sh_dir/src/core/40_node_query.sh"
 . "$is_sh_dir/src/core/50_node_write.sh"
@@ -312,6 +313,8 @@ url_qr() { query_url_qr "$@"; }
 manage() { runtime_manage "$@"; }
 
 cron_task() { runtime_cron_task; }
+
+domain() { domain_manage "$@"; }
 
 update() { admin_update "$@"; }
 

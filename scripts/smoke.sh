@@ -21,6 +21,7 @@ run() {
 run "$SB_BIN" help
 run "$SB_BIN" version
 run "$SB_BIN" status
+run "$SB_BIN" domain list
 
 echo
 echo "[smoke] basic checks passed"
