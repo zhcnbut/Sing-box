@@ -374,7 +374,6 @@ query_info() {
     esac
 
     if [[ $is_show_all ]]; then
-        echo -e "\e[93m[${is_config_name}]\e[0m 协议: \e[96m${is_protocol}\e[0m | 端口: \e[92m${port}\e[0m"
         echo -e "\e[4;${is_color}m${is_url}\e[0m"
         echo -e "\e[90m-----------------------------------------------------\e[0m"
         return

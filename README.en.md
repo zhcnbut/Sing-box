@@ -85,6 +85,11 @@ sb status
 | `sb all` | Print all node URLs |
 | `sb log` | Tail runtime logs |
 | `sb update` | Update core/script |
+| `sb doctor` | Run system diagnostics (service/config/network) |
+| `sb dry-run <command> [args...]` | Preview command without applying writes/restarts |
+| `sb backup list` | List configuration snapshots |
+| `sb backup create [reason]` | Create a snapshot manually |
+| `sb rollback [snapshot_id]` | Roll back to a snapshot |
 | `sb domain list` | List Reality domain pool |
 | `sb domain add <domain> [weight] [region]` | Add a domain |
 | `sb domain del <domain>` | Remove/disable a domain |

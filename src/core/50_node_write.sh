@@ -43,6 +43,16 @@ write_create() {
             msg
             return
         fi
+
+        snapshot_ensure "write-create"
+        if [[ $is_dry_run ]]; then
+            msg "DRY-RUN: 将创建配置文件 -> $is_json_file"
+            msg "DRY-RUN: 协议=$is_new_protocol 端口=$port 备注=$safe_remark"
+            if [[ $host ]]; then msg "DRY-RUN: host=$host"; fi
+            if [[ $is_servername ]]; then msg "DRY-RUN: serverName=$is_servername"; fi
+            return
+        fi
+
         if [[ $is_config_file ]]; then
             is_no_del_msg=1
             del $is_config_file
@@ -170,6 +180,8 @@ write_change() {
         ask set_change_list
         is_change_id=${is_can_change[$REPLY - 1]}
     fi
+
+    snapshot_ensure "write-change"
 
     case $is_change_id in
     full) add $net ${@:3} ;;
@@ -319,6 +331,11 @@ write_del() {
         get info $1
     fi
     if [[ $is_config_file ]]; then
+        snapshot_ensure "write-del"
+        if [[ $is_dry_run ]]; then
+            msg "DRY-RUN: 将删除配置文件 -> $is_conf_dir/$is_config_file"
+            return
+        fi
         if [[ $is_main_start && ! $is_no_del_msg ]]; then
             msg "\n是否删除配置文件?: $is_config_file"
             pause

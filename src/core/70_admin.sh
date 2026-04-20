@@ -51,11 +51,18 @@ admin_update() {
 }
 
 admin_uninstall() {
+    snapshot_ensure "pre-uninstall"
+
     if [[ $is_caddy ]]; then
         is_tmp_list=("卸载 $is_core_name" "卸载 ${is_core_name} & Caddy")
         ask list is_do_uninstall "" "\n请选择卸载:"
     else
         ask string y "是否卸载 ${is_core_name}? [y]: "
+    fi
+
+    if [[ $is_dry_run ]]; then
+        msg "\nDRY-RUN: 将卸载 $is_core_name 及相关服务/目录（未实际执行）\n"
+        return
     fi
 
     manage stop &>/dev/null
@@ -132,7 +139,7 @@ admin_is_main_menu() {
         show_help
         ;;
     9)
-        ask list is_do_other "节点订阅(Sub) 一键查看所有节点信息 启用BBR 查看日志 测试运行 重装脚本 设置DNS 手动更新" "" "\n请选择进阶工具:"
+        ask list is_do_other "节点订阅(Sub) 一键查看所有节点信息 启用BBR 查看日志 测试运行 重装脚本 设置DNS 手动更新 系统诊断(doctor) 查看快照列表 手动创建快照 回滚快照" "" "\n请选择进阶工具:"
         case $REPLY in
         1) gen_sub ;;
         2) show_all_nodes ;;
@@ -147,6 +154,10 @@ admin_is_main_menu() {
             ask list is_do_update "" "\n请选择手动更新:"
             update $REPLY
             ;;
+        9) doctor ;;
+        10) backup_list ;;
+        11) unset is_snapshot_id; snapshot_ensure "manual-menu" ;;
+        12) rollback ;;
         esac
         ;;
     10)
@@ -157,6 +168,15 @@ admin_is_main_menu() {
 }
 
 admin_main() {
+    if [[ $1 == 'dry-run' || $1 == '--dry-run' || $1 == 'drun' ]]; then
+        is_dry_run=1
+        shift
+        if [[ ! $1 ]]; then
+            err "请使用: sb dry-run <command> [args...]"
+        fi
+        msg "\n已启用 DRY-RUN 模式，本次不会执行写入或服务变更.\n"
+    fi
+
     case $1 in
     a | add | gen | no-auto-tls)
         if [[ $1 == 'gen' ]]; then is_gen=1; fi
@@ -201,6 +221,15 @@ admin_main() {
         ;;
     dns) dns_set ${@:2} ;;
     domain | domains) domain ${@:2} ;;
+    doctor | diag) doctor ;;
+    backup)
+        case "${2:-list}" in
+        list | ls) backup_list ;;
+        create) unset is_snapshot_id; snapshot_ensure "${3:-manual}" ;;
+        *) err "无法识别 backup 参数, 请使用: sb backup [list|create [reason]]" ;;
+        esac
+        ;;
+    rollback | restore) rollback "$2" ;;
     cron) cron_task ;;
     sub) gen_sub ;;
     all) show_all_nodes ;;
