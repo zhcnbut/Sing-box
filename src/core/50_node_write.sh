@@ -198,6 +198,11 @@ write_change() {
         if [[ $is_auto ]]; then get_port; is_new_port=$tmp_port; fi
         if [[ ! $is_new_port ]]; then ask string is_new_port "请输入新端口"; fi
         if [[ $is_caddy && $host ]]; then
+            if [[ $is_dry_run ]]; then
+                msg "DRY-RUN: 将更新 Caddy 端口映射 -> host=$host https_port=$is_new_port"
+                msg "DRY-RUN: 将重启 caddy"
+                return
+            fi
             net=$is_old_net
             is_https_port=$is_new_port
             load caddy.sh
@@ -270,6 +275,14 @@ write_change() {
         is_new_private_key=$3
         is_new_public_key=$4
         if [[ ! $is_reality ]]; then err "($is_config_file) 不支持更改密钥."; fi
+        if [[ $is_dry_run ]]; then
+            if [[ $is_auto ]]; then
+                msg "DRY-RUN: 将自动生成新的 Reality 密钥对并写入配置: $is_config_file"
+            else
+                msg "DRY-RUN: 将更新 Reality 密钥 -> config=$is_config_file"
+            fi
+            return
+        fi
         if [[ $is_auto ]]; then
             get_pbk
             add $net
@@ -309,6 +322,11 @@ write_change() {
         if [[ ! -f $is_caddy_conf/${host}.conf.add ]]; then err "无法配置伪装网站."; fi
         if [[ ! $is_new_proxy_site ]]; then ask string is_new_proxy_site "请输入新的伪装网站 (例如 example.com)"; fi
         proxy_site=$(sed 's#^.*//##;s#/$##' <<<$is_new_proxy_site)
+        if [[ $is_dry_run ]]; then
+            msg "DRY-RUN: 将更新伪装网站 -> host=$host proxy_site=$proxy_site"
+            msg "DRY-RUN: 将重启 caddy"
+            return
+        fi
         load caddy.sh
         caddy_config proxy
         manage restart caddy &
@@ -595,4 +613,3 @@ write_add() {
 }
 
 footer_msg() { ui_footer_msg; }
-
