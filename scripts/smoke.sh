@@ -21,6 +21,8 @@ run() {
 run "$SB_BIN" help
 run "$SB_BIN" version
 run "$SB_BIN" status
+run "$SB_BIN" doctor
+run "$SB_BIN" backup list
 run "$SB_BIN" domain list
 
 echo

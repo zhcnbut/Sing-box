@@ -1,5 +1,210 @@
 #!/bin/bash
 
+runtime_snapshot_dir() {
+    echo "$is_sh_dir/backups"
+}
+
+runtime_snapshot_ensure() {
+    local reason="${1:-manual}"
+    local backup_root snapshot_id snapshot_dir
+
+    if [[ $is_gen || $is_test_json || $is_disable_snapshot ]]; then
+        return
+    fi
+    if [[ $is_snapshot_id ]]; then
+        return
+    fi
+
+    backup_root="$(runtime_snapshot_dir)"
+    mkdir -p "$backup_root"
+
+    snapshot_id="$(date +%Y%m%d-%H%M%S)-${reason}"
+    snapshot_dir="$backup_root/$snapshot_id"
+    mkdir -p "$snapshot_dir"
+
+    if [[ -f $is_config_json ]]; then
+        cp -f -- "$is_config_json" "$snapshot_dir/config.json"
+    fi
+    if [[ -d $is_conf_dir ]]; then
+        mkdir -p "$snapshot_dir/conf"
+        cp -rf -- "$is_conf_dir/." "$snapshot_dir/conf/"
+    fi
+    if [[ $is_caddy && -d $is_caddy_conf ]]; then
+        mkdir -p "$snapshot_dir/caddy-conf"
+        cp -rf -- "$is_caddy_conf/." "$snapshot_dir/caddy-conf/"
+    fi
+
+    cat >"$snapshot_dir/meta.txt" <<EOF
+created_at=$(date '+%F %T %z')
+reason=$reason
+core_version=$is_core_ver
+script_version=$is_sh_ver
+EOF
+
+    # 保留最近 20 个快照，避免长期占用磁盘
+    ls -1dt "$backup_root"/* 2>/dev/null | tail -n +21 | xargs -r rm -rf --
+
+    is_snapshot_id="$snapshot_id"
+    msg "已创建配置快照: $(_green $snapshot_id)"
+}
+
+runtime_snapshot_list() {
+    local backup_root
+    backup_root="$(runtime_snapshot_dir)"
+
+    if [[ ! -d $backup_root ]]; then
+        msg "\n未找到任何快照目录.\n"
+        return
+    fi
+
+    msg "\n------------- 配置快照列表 -------------"
+    ls -1dt "$backup_root"/* 2>/dev/null | while read -r d; do
+        [[ -d $d ]] || continue
+        msg "$(basename "$d")"
+    done
+    msg "----------------------------------------\n"
+}
+
+runtime_snapshot_restore() {
+    local backup_root target_id target_dir latest_id
+    backup_root="$(runtime_snapshot_dir)"
+    target_id="$1"
+
+    if [[ ! -d $backup_root ]]; then
+        err "未找到快照目录."
+    fi
+
+    if [[ ! $target_id ]]; then
+        latest_id="$(ls -1dt "$backup_root"/* 2>/dev/null | head -n 1)"
+        if [[ ! $latest_id ]]; then
+            err "没有可回滚的快照."
+        fi
+        target_id="$(basename "$latest_id")"
+    fi
+
+    target_dir="$backup_root/$target_id"
+    if [[ ! -d $target_dir ]]; then
+        err "快照不存在: $target_id"
+    fi
+
+    # 回滚前再做一次保护性快照
+    unset is_snapshot_id
+    runtime_snapshot_ensure "pre-rollback"
+
+    if [[ -f $target_dir/config.json ]]; then
+        cp -f -- "$target_dir/config.json" "$is_config_json"
+    fi
+
+    if [[ -d $target_dir/conf ]]; then
+        rm -rf -- "$is_conf_dir"
+        mkdir -p "$is_conf_dir"
+        cp -rf -- "$target_dir/conf/." "$is_conf_dir/"
+    fi
+
+    if [[ $is_caddy && -d $target_dir/caddy-conf ]]; then
+        mkdir -p "$is_caddy_conf"
+        rm -rf -- "$is_caddy_conf"/*
+        cp -rf -- "$target_dir/caddy-conf/." "$is_caddy_conf/"
+    fi
+
+    manage restart &
+    if [[ $is_caddy && -d $target_dir/caddy-conf ]]; then
+        manage restart caddy &
+    fi
+
+    _green "\n回滚完成: $target_id\n"
+}
+
+runtime_doctor() {
+    local ok=0 warn_count=0 fail=0 conf_count=0
+    local domain_count=0
+    local host_ip=""
+    local dns_test=""
+
+    msg "\n============= 系统诊断 (doctor) ============="
+
+    if [[ -x $is_core_bin ]]; then
+        msg "[OK] 核心二进制: $is_core_bin"
+        ((ok++))
+    else
+        msg "[FAIL] 核心二进制不存在: $is_core_bin"
+        ((fail++))
+    fi
+
+    if [[ -f $is_config_json ]]; then
+        msg "[OK] 主配置存在: $is_config_json"
+        ((ok++))
+    else
+        msg "[FAIL] 主配置缺失: $is_config_json"
+        ((fail++))
+    fi
+
+    if [[ -d $is_conf_dir ]]; then
+        conf_count=$(find "$is_conf_dir" -maxdepth 1 -type f -name '*.json' 2>/dev/null | wc -l)
+        msg "[OK] 节点配置数量: $conf_count"
+        ((ok++))
+    else
+        msg "[FAIL] 节点配置目录缺失: $is_conf_dir"
+        ((fail++))
+    fi
+
+    if systemctl is-active --quiet "$is_core" 2>/dev/null; then
+        msg "[OK] 服务状态: $is_core 运行中"
+        ((ok++))
+    else
+        msg "[WARN] 服务状态: $is_core 未运行"
+        ((warn_count++))
+    fi
+
+    if [[ $is_caddy ]]; then
+        if systemctl is-active --quiet caddy 2>/dev/null; then
+            msg "[OK] 服务状态: caddy 运行中"
+            ((ok++))
+        else
+            msg "[WARN] 服务状态: caddy 未运行"
+            ((warn_count++))
+        fi
+    fi
+
+    if [[ -x $is_core_bin && -f $is_config_json ]]; then
+        if $is_core_bin check -c "$is_config_json" -C "$is_conf_dir" >/dev/null 2>&1; then
+            msg "[OK] 配置校验: sing-box check 通过"
+            ((ok++))
+        else
+            msg "[FAIL] 配置校验: sing-box check 未通过"
+            ((fail++))
+        fi
+    fi
+
+    host_ip=$(curl -s4m6 https://icanhazip.com 2>/dev/null || true)
+    if [[ $host_ip ]]; then
+        msg "[OK] 出站网络: 可访问公网 (IPv4)"
+        ((ok++))
+    else
+        msg "[WARN] 出站网络: 无法快速获取公网 IPv4"
+        ((warn_count++))
+    fi
+
+    dns_test=$(wget -qO- -t1 -T6 --header="accept: application/dns-json" "https://one.one.one.one/dns-query?name=github.com&type=a" 2>/dev/null || true)
+    if [[ $dns_test =~ \"Status\":0 ]]; then
+        msg "[OK] DNS over HTTPS: one.one.one.one 可用"
+        ((ok++))
+    else
+        msg "[WARN] DNS over HTTPS: one.one.one.one 测试失败"
+        ((warn_count++))
+    fi
+
+    if declare -F domain_collect_pool >/dev/null 2>&1; then
+        domain_count=$(domain_collect_pool global 2>/dev/null | wc -l)
+        msg "[OK] Reality 域名池条目: $domain_count"
+        ((ok++))
+    fi
+
+    msg "----------------------------------------------"
+    msg "诊断结果: OK=$ok WARN=$warn_count FAIL=$fail"
+    msg "==============================================\n"
+}
+
 runtime_manage() {
     if [[ $is_dont_auto_exit ]]; then return; fi
     case $1 in

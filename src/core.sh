@@ -314,6 +314,14 @@ manage() { runtime_manage "$@"; }
 
 cron_task() { runtime_cron_task; }
 
+snapshot_ensure() { runtime_snapshot_ensure "$@"; }
+
+backup_list() { runtime_snapshot_list; }
+
+rollback() { runtime_snapshot_restore "$@"; }
+
+doctor() { runtime_doctor; }
+
 domain() { domain_manage "$@"; }
 
 update() { admin_update "$@"; }

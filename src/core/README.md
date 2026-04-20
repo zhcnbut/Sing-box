@@ -13,7 +13,7 @@ This folder contains the refactored core modules for the Sing-box-EV script.
 - `25_domain.sh`
   - Reality domain pool management, health checks, weighted selection.
 - `30_runtime.sh`
-  - Runtime/service operations (`manage`, `cron` workflow).
+  - Runtime/service operations (`manage`, `cron`, `doctor`, snapshot/rollback).
 - `40_node_query.sh`
   - Read/query flows (`get`, `info`, `url`, list all nodes).
 - `50_node_write.sh`

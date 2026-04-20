@@ -51,6 +51,8 @@ admin_update() {
 }
 
 admin_uninstall() {
+    snapshot_ensure "pre-uninstall"
+
     if [[ $is_caddy ]]; then
         is_tmp_list=("卸载 $is_core_name" "卸载 ${is_core_name} & Caddy")
         ask list is_do_uninstall "" "\n请选择卸载:"
@@ -132,7 +134,7 @@ admin_is_main_menu() {
         show_help
         ;;
     9)
-        ask list is_do_other "节点订阅(Sub) 一键查看所有节点信息 启用BBR 查看日志 测试运行 重装脚本 设置DNS 手动更新" "" "\n请选择进阶工具:"
+        ask list is_do_other "节点订阅(Sub) 一键查看所有节点信息 启用BBR 查看日志 测试运行 重装脚本 设置DNS 手动更新 系统诊断(doctor)" "" "\n请选择进阶工具:"
         case $REPLY in
         1) gen_sub ;;
         2) show_all_nodes ;;
@@ -147,6 +149,7 @@ admin_is_main_menu() {
             ask list is_do_update "" "\n请选择手动更新:"
             update $REPLY
             ;;
+        9) doctor ;;
         esac
         ;;
     10)
@@ -201,6 +204,15 @@ admin_main() {
         ;;
     dns) dns_set ${@:2} ;;
     domain | domains) domain ${@:2} ;;
+    doctor | diag) doctor ;;
+    backup)
+        case "${2:-list}" in
+        list | ls) backup_list ;;
+        create) unset is_snapshot_id; snapshot_ensure "${3:-manual}" ;;
+        *) err "无法识别 backup 参数, 请使用: sb backup [list|create [reason]]" ;;
+        esac
+        ;;
+    rollback | restore) rollback "$2" ;;
     cron) cron_task ;;
     sub) gen_sub ;;
     all) show_all_nodes ;;

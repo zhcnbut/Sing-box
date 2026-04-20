@@ -43,6 +43,8 @@ write_create() {
             msg
             return
         fi
+
+        snapshot_ensure "write-create"
         if [[ $is_config_file ]]; then
             is_no_del_msg=1
             del $is_config_file
@@ -170,6 +172,8 @@ write_change() {
         ask set_change_list
         is_change_id=${is_can_change[$REPLY - 1]}
     fi
+
+    snapshot_ensure "write-change"
 
     case $is_change_id in
     full) add $net ${@:3} ;;
@@ -319,6 +323,7 @@ write_del() {
         get info $1
     fi
     if [[ $is_config_file ]]; then
+        snapshot_ensure "write-del"
         if [[ $is_main_start && ! $is_no_del_msg ]]; then
             msg "\n是否删除配置文件?: $is_config_file"
             pause
