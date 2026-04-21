@@ -2,30 +2,30 @@
 
 validate_is_test() {
     case $1 in
-    number)
-        echo $2 | grep -E '^[1-9][0-9]?+$'
-        ;;
-    port)
-        if [[ $(validate_is_test number $2) ]]; then
-            if [[ $2 -le 65535 ]]; then
+        number)
+            echo $2 | grep -E '^[1-9][0-9]?+$'
+            ;;
+        port)
+            if [[ $(validate_is_test number $2) ]]; then
+                if [[ $2 -le 65535 ]]; then
+                    echo ok
+                fi
+            fi
+            ;;
+        port_used)
+            if [[ $(validate_is_port_used $2) && ! $is_cant_test_port ]]; then
                 echo ok
             fi
-        fi
-        ;;
-    port_used)
-        if [[ $(validate_is_port_used $2) && ! $is_cant_test_port ]]; then
-            echo ok
-        fi
-        ;;
-    domain)
-        echo $2 | grep -E -i '^\w(\w|\-|\.)?+\.\w+$'
-        ;;
-    path)
-        echo $2 | grep -E -i '^\/\w(\w|\-|\/)?+\w$'
-        ;;
-    uuid)
-        echo $2 | grep -E -i '[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}'
-        ;;
+            ;;
+        domain)
+            echo $2 | grep -E -i '^\w(\w|\-|\.)?+\.\w+$'
+            ;;
+        path)
+            echo $2 | grep -E -i '^\/\w(\w|\-|\/)?+\w$'
+            ;;
+        uuid)
+            echo $2 | grep -E -i '[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}'
+            ;;
     esac
 }
 

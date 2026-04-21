@@ -48,15 +48,15 @@ is_wget=$(type -P wget)
 
 # arch check
 case $(uname -m) in
-amd64 | x86_64)
-    is_arch=amd64
-    ;;
-*aarch64* | *armv8*)
-    is_arch=arm64
-    ;;
-*)
-    err "此脚本仅支持 64 位系统..."
-    ;;
+    amd64 | x86_64)
+        is_arch=amd64
+        ;;
+    *aarch64* | *armv8*)
+        is_arch=arm64
+        ;;
+    *)
+        err "此脚本仅支持 64 位系统..."
+        ;;
 esac
 
 is_core=sing-box
@@ -86,7 +86,7 @@ tmp_var_lists=(
     is_pkg_ok
 )
 
-tmpdir=$(mktemp -d 2>/dev/null || mktemp -d -t 'tmp-XXXXXX')
+tmpdir=$(mktemp -d 2> /dev/null || mktemp -d -t 'tmp-XXXXXX')
 
 for i in ${tmp_var_lists[*]}; do
     export $i=$tmpdir/$i
@@ -102,9 +102,9 @@ _wget() {
 
 msg() {
     case $1 in
-    warn) color=$yellow ;;
-    err) color=$red ;;
-    ok) color=$green ;;
+        warn) color=$yellow ;;
+        err) color=$red ;;
+        ok) color=$green ;;
     esac
     echo -e "${color}$(date +'%T')${none}) ${2}"
 }
@@ -126,48 +126,48 @@ install_pkg() {
     if [[ $cmd_not_found ]]; then
         pkg=$(echo $cmd_not_found | sed 's/,/ /g')
         msg warn "安装依赖包 > ${pkg}"
-        $cmd install -y $pkg &>/dev/null
+        $cmd install -y $pkg &> /dev/null
         if [[ $? != 0 ]]; then
-            [[ $cmd =~ yum ]] && yum install epel-release -y &>/dev/null
+            [[ $cmd =~ yum ]] && yum install epel-release -y &> /dev/null
             if [[ $cmd =~ zypper ]]; then
-                $cmd --non-interactive refresh &>/dev/null
+                $cmd --non-interactive refresh &> /dev/null
             else
-                $cmd update -y &>/dev/null
+                $cmd update -y &> /dev/null
             fi
-            $cmd install -y $pkg &>/dev/null
-            [[ $? == 0 ]] && >$is_pkg_ok
+            $cmd install -y $pkg &> /dev/null
+            [[ $? == 0 ]] && > $is_pkg_ok
         else
-            >$is_pkg_ok
+            > $is_pkg_ok
         fi
     else
-        >$is_pkg_ok
+        > $is_pkg_ok
     fi
 }
 
 download() {
     case $1 in
-    core)
-        [[ ! $is_core_ver ]] && is_core_ver=$(_wget -qO- "https://api.github.com/repos/${is_core_repo}/releases/latest?v=$RANDOM" | grep tag_name | grep -E -o 'v([0-9.]+)')
-        [[ $is_core_ver ]] && link="https://github.com/${is_core_repo}/releases/download/${is_core_ver}/${is_core}-${is_core_ver:1}-linux-${is_arch}.tar.gz"
-        name=$is_core_name
-        tmpfile=$tmpcore
-        is_ok=$is_core_ok
-        ;;
-    sh)
-        # =======================================================================
-        # 适配新仓库 main 分支打包
-        # =======================================================================
-        link="https://github.com/${is_sh_repo}/archive/refs/heads/main.tar.gz"
-        name="$is_core_name 脚本"
-        tmpfile=$tmpsh
-        is_ok=$is_sh_ok
-        ;;
-    jq)
-        link=https://github.com/jqlang/jq/releases/download/jq-1.7.1/jq-linux-$is_arch
-        name="jq"
-        tmpfile=$tmpjq
-        is_ok=$is_jq_ok
-        ;;
+        core)
+            [[ ! $is_core_ver ]] && is_core_ver=$(_wget -qO- "https://api.github.com/repos/${is_core_repo}/releases/latest?v=$RANDOM" | grep tag_name | grep -E -o 'v([0-9.]+)')
+            [[ $is_core_ver ]] && link="https://github.com/${is_core_repo}/releases/download/${is_core_ver}/${is_core}-${is_core_ver:1}-linux-${is_arch}.tar.gz"
+            name=$is_core_name
+            tmpfile=$tmpcore
+            is_ok=$is_core_ok
+            ;;
+        sh)
+            # =======================================================================
+            # 适配新仓库 main 分支打包
+            # =======================================================================
+            link="https://github.com/${is_sh_repo}/archive/refs/heads/main.tar.gz"
+            name="$is_core_name 脚本"
+            tmpfile=$tmpsh
+            is_ok=$is_sh_ok
+            ;;
+        jq)
+            link=https://github.com/jqlang/jq/releases/download/jq-1.7.1/jq-linux-$is_arch
+            name="jq"
+            tmpfile=$tmpjq
+            is_ok=$is_jq_ok
+            ;;
     esac
 
     [[ $link ]] && {
@@ -189,9 +189,18 @@ check_status() {
         is_fail=1
     }
     if [[ $is_wget ]]; then
-        [[ ! -f $is_core_ok ]] && { msg err "下载 ${is_core_name} 失败"; is_fail=1; }
-        [[ ! -f $is_sh_ok ]] && { msg err "下载脚本失败"; is_fail=1; }
-        [[ ! -f $is_jq_ok ]] && { msg err "下载 jq 失败"; is_fail=1; }
+        [[ ! -f $is_core_ok ]] && {
+            msg err "下载 ${is_core_name} 失败"
+            is_fail=1
+        }
+        [[ ! -f $is_sh_ok ]] && {
+            msg err "下载脚本失败"
+            is_fail=1
+        }
+        [[ ! -f $is_jq_ok ]] && {
+            msg err "下载 jq 失败"
+            is_fail=1
+        }
     else
         [[ ! $is_fail ]] && {
             is_wget=1
@@ -209,17 +218,23 @@ check_status() {
 pass_args() {
     while [[ $# -gt 0 ]]; do
         case $1 in
-        -f | --core-file)
-            is_core_file=$2
-            shift 2 ;;
-        -l | --local-install)
-            local_install=1
-            shift 1 ;;
-        -v | --core-version)
-            is_core_ver=v${2//v/}
-            shift 2 ;;
-        -h | --help) show_help ;;
-        *) echo -e "\n${is_err} ($@) 为未知参数...\n"; show_help ;;
+            -f | --core-file)
+                is_core_file=$2
+                shift 2
+                ;;
+            -l | --local-install)
+                local_install=1
+                shift 1
+                ;;
+            -v | --core-version)
+                is_core_ver=v${2//v/}
+                shift 2
+                ;;
+            -h | --help) show_help ;;
+            *)
+                echo -e "\n${is_err} ($@) 为未知参数...\n"
+                show_help
+                ;;
         esac
     done
 }
@@ -248,18 +263,18 @@ main() {
 
     msg warn "开始安装..."
     [[ $is_core_ver ]] && msg warn "${is_core_name} 版本: ${yellow}$is_core_ver${none}"
-    
+
     mkdir -p $tmpdir
     [[ $is_core_file ]] && cp -f $is_core_file $is_core_ok
-    [[ $local_install ]] && >$is_sh_ok
+    [[ $local_install ]] && > $is_sh_ok
 
-    timedatectl set-ntp true &>/dev/null
+    timedatectl set-ntp true &> /dev/null
     [[ $? != 0 ]] && is_ntp_on=1
 
     install_pkg $is_pkg &
 
     if [[ $(type -P jq) ]]; then
-        >$is_jq_ok
+        > $is_jq_ok
     else
         jq_not_found=1
     fi
@@ -276,14 +291,17 @@ main() {
 
     if [[ $is_core_file ]]; then
         mkdir -p $tmpdir/testzip
-        tar zxf $is_core_ok --strip-components 1 -C $tmpdir/testzip &>/dev/null
+        tar zxf $is_core_ok --strip-components 1 -C $tmpdir/testzip &> /dev/null
         [[ $? != 0 || ! -f $tmpdir/testzip/$is_core ]] && {
             msg err "${is_core_name} 文件无法通过测试."
             exit_and_del_tmpdir
         }
     fi
 
-    [[ ! $ip ]] && { msg err "获取服务器 IP 失败."; exit_and_del_tmpdir; }
+    [[ ! $ip ]] && {
+        msg err "获取服务器 IP 失败."
+        exit_and_del_tmpdir
+    }
 
     mkdir -p $is_sh_dir
     if [[ $local_install ]]; then
@@ -299,8 +317,8 @@ main() {
         tar zxf $is_core_ok --strip-components 1 -C $is_core_dir/bin
     fi
 
-    echo "alias sb=$is_sh_bin" >>/root/.bashrc
-    echo "alias $is_core=$is_sh_bin" >>/root/.bashrc
+    echo "alias sb=$is_sh_bin" >> /root/.bashrc
+    echo "alias $is_core=$is_sh_bin" >> /root/.bashrc
 
     ln -sf $is_sh_dir/$is_core.sh $is_sh_bin
     ln -sf $is_sh_dir/$is_core.sh ${is_sh_bin/$is_core/sb}
@@ -317,19 +335,18 @@ main() {
     # 由于是初次安装环境还未配置，我们临时加载 utils.sh
     . $is_sh_dir/src/utils.sh
     is_new_install=1
-    install_service $is_core &>/dev/null
+    install_service $is_core &> /dev/null
 
     mkdir -p $is_conf_dir
 
     # 模拟环境以供 add reality 运行
     . $is_sh_dir/src/init.sh
-    
+
     # 强制在静默模式下创建节点，防止备注卡死
     is_main_start=
     add reality
-    
+
     exit_and_del_tmpdir ok
 }
 
 main $@
-

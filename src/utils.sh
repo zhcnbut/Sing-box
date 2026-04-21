@@ -6,18 +6,18 @@
 # ----------------- Download 模块 -----------------
 get_latest_version() {
     case $1 in
-    core)
-        name=$is_core_name
-        url="https://api.github.com/repos/${is_core_repo}/releases/latest?v=$RANDOM"
-        ;;
-    sh)
-        name="$is_core_name 脚本"
-        url="https://api.github.com/repos/$is_sh_repo/releases/latest?v=$RANDOM"
-        ;;
-    caddy)
-        name="Caddy"
-        url="https://api.github.com/repos/$is_caddy_repo/releases/latest?v=$RANDOM"
-        ;;
+        core)
+            name=$is_core_name
+            url="https://api.github.com/repos/${is_core_repo}/releases/latest?v=$RANDOM"
+            ;;
+        sh)
+            name="$is_core_name 脚本"
+            url="https://api.github.com/repos/$is_sh_repo/releases/latest?v=$RANDOM"
+            ;;
+        caddy)
+            name="Caddy"
+            url="https://api.github.com/repos/$is_caddy_repo/releases/latest?v=$RANDOM"
+            ;;
     esac
     latest_ver=$(_wget -qO- $url | grep tag_name | grep -E -o 'v([0-9.]+)')
     [[ ! $latest_ver ]] && err "获取 ${name} 最新版本失败."
@@ -27,34 +27,34 @@ get_latest_version() {
 download() {
     latest_ver=$2
     [[ ! $latest_ver ]] && get_latest_version $1
-    tmpdir=$(mktemp -d 2>/dev/null || mktemp -d -t 'tmp-XXXXXX')
-    
+    tmpdir=$(mktemp -d 2> /dev/null || mktemp -d -t 'tmp-XXXXXX')
+
     case $1 in
-    core)
-        name=$is_core_name
-        tmpfile=$tmpdir/$is_core.tar.gz
-        link="https://github.com/${is_core_repo}/releases/download/${latest_ver}/${is_core}-${latest_ver:1}-linux-${is_arch}.tar.gz"
-        download_file
-        tar zxf $tmpfile --strip-components 1 -C $is_core_dir/bin
-        chmod +x $is_core_bin
-        ;;
-    sh)
-        name="$is_core_name 脚本"
-        tmpfile=$tmpdir/sh.tar.gz
-        link="https://github.com/${is_sh_repo}/archive/refs/tags/${latest_ver}.tar.gz"
-        download_file
-        tar zxf $tmpfile --strip-components 1 -C $is_sh_dir
-        chmod +x $is_sh_bin ${is_sh_bin/$is_core/sb}
-        ;;
-    caddy)
-        name="Caddy"
-        tmpfile=$tmpdir/caddy.tar.gz
-        link="https://github.com/${is_caddy_repo}/releases/download/${latest_ver}/caddy_${latest_ver:1}_linux_${is_arch}.tar.gz"
-        download_file
-        tar zxf $tmpfile -C $tmpdir
-        cp -f $tmpdir/caddy $is_caddy_bin
-        chmod +x $is_caddy_bin
-        ;;
+        core)
+            name=$is_core_name
+            tmpfile=$tmpdir/$is_core.tar.gz
+            link="https://github.com/${is_core_repo}/releases/download/${latest_ver}/${is_core}-${latest_ver:1}-linux-${is_arch}.tar.gz"
+            download_file
+            tar zxf $tmpfile --strip-components 1 -C $is_core_dir/bin
+            chmod +x $is_core_bin
+            ;;
+        sh)
+            name="$is_core_name 脚本"
+            tmpfile=$tmpdir/sh.tar.gz
+            link="https://github.com/${is_sh_repo}/archive/refs/tags/${latest_ver}.tar.gz"
+            download_file
+            tar zxf $tmpfile --strip-components 1 -C $is_sh_dir
+            chmod +x $is_sh_bin ${is_sh_bin/$is_core/sb}
+            ;;
+        caddy)
+            name="Caddy"
+            tmpfile=$tmpdir/caddy.tar.gz
+            link="https://github.com/${is_caddy_repo}/releases/download/${latest_ver}/caddy_${latest_ver:1}_linux_${is_arch}.tar.gz"
+            download_file
+            tar zxf $tmpfile -C $tmpdir
+            cp -f $tmpdir/caddy $is_caddy_bin
+            chmod +x $is_caddy_bin
+            ;;
     esac
     rm -rf -- "$tmpdir"
     unset latest_ver
@@ -70,8 +70,8 @@ download_file() {
 # ----------------- Systemd 模块 -----------------
 install_service() {
     case $1 in
-    $is_core)
-        cat >/lib/systemd/system/$is_core.service <<<"
+        $is_core)
+            cat > /lib/systemd/system/$is_core.service <<< "
 [Unit]
 Description=$is_core_name Service
 Documentation=https://sing-box.sagernet.org/
@@ -90,9 +90,9 @@ ProtectSystem=full
 
 [Install]
 WantedBy=multi-user.target"
-        ;;
-    caddy)
-        cat >/lib/systemd/system/caddy.service <<<"
+            ;;
+        caddy)
+            cat > /lib/systemd/system/caddy.service <<< "
 [Unit]
 Description=Caddy
 Documentation=https://caddyserver.com/docs/
@@ -113,19 +113,19 @@ ProtectSystem=full
 
 [Install]
 WantedBy=multi-user.target"
-        ;;
+            ;;
     esac
-    systemctl enable $1 >/dev/null 2>&1
-    systemctl daemon-reload >/dev/null 2>&1
+    systemctl enable $1 > /dev/null 2>&1
+    systemctl daemon-reload > /dev/null 2>&1
 }
 
 # ----------------- BBR 模块 -----------------
 _open_bbr() {
     sed -i '/net.ipv4.tcp_congestion_control/d' /etc/sysctl.conf
     sed -i '/net.core.default_qdisc/d' /etc/sysctl.conf
-    echo "net.ipv4.tcp_congestion_control = bbr" >>/etc/sysctl.conf
-    echo "net.core.default_qdisc = fq" >>/etc/sysctl.conf
-    sysctl -p &>/dev/null
+    echo "net.ipv4.tcp_congestion_control = bbr" >> /etc/sysctl.conf
+    echo "net.core.default_qdisc = fq" >> /etc/sysctl.conf
+    sysctl -p &> /dev/null
     echo
     _green "..已经启用 BBR 优化...."
     echo
@@ -147,22 +147,22 @@ is_log_level_list=(trace debug info warn error fatal panic none del)
 log_set() {
     if [[ $1 ]]; then
         for v in ${is_log_level_list[@]}; do
-            [[ $(grep -E -i "^${1,,}$" <<<$v) ]] && is_log_level_use=$v && break
+            [[ $(grep -E -i "^${1,,}$" <<< $v) ]] && is_log_level_use=$v && break
         done
         [[ ! $is_log_level_use ]] && err "无法识别 log 参数."
-        
+
         case $is_log_level_use in
-        del)
-            rm -f -- "$is_log_dir"/*.log 2>/dev/null
-            msg "\n $(_green 已临时删除 log 文件.)\n"
-            ;;
-        none)
-            rm -f -- "$is_log_dir"/*.log 2>/dev/null
-            cat <<<$(jq '.log={"disabled":true}' $is_config_json) >$is_config_json
-            ;;
-        *)
-            cat <<<$(jq '.log={output:"/var/log/'$is_core'/access.log",level:"'$is_log_level_use'","timestamp":true}' $is_config_json) >$is_config_json
-            ;;
+            del)
+                rm -f -- "$is_log_dir"/*.log 2> /dev/null
+                msg "\n $(_green 已临时删除 log 文件.)\n"
+                ;;
+            none)
+                rm -f -- "$is_log_dir"/*.log 2> /dev/null
+                cat <<< $(jq '.log={"disabled":true}' $is_config_json) > $is_config_json
+                ;;
+            *)
+                cat <<< $(jq '.log={output:"/var/log/'$is_core'/access.log",level:"'$is_log_level_use'","timestamp":true}' $is_config_json) > $is_config_json
+                ;;
         esac
 
         manage restart &
@@ -186,14 +186,14 @@ dns_set() {
     fi
     if [[ $1 ]]; then
         case ${1,,} in
-        11 | 1111) is_dns_use=${is_dns_list[0]} ;;
-        88 | 8888) is_dns_use=${is_dns_list[1]} ;;
-        gg | google) is_dns_use=${is_dns_list[2]} ;;
-        cf | cloudflare) is_dns_use=${is_dns_list[3]} ;;
-        nosex | family) is_dns_use=${is_dns_list[4]} ;;
-        set) [[ $2 ]] && is_dns_use=${2,,} || ask string is_dns_use "请输入 DNS: " ;;
-        none) is_dns_use=none ;;
-        *) err "无法识别 DNS 参数" ;;
+            11 | 1111) is_dns_use=${is_dns_list[0]} ;;
+            88 | 8888) is_dns_use=${is_dns_list[1]} ;;
+            gg | google) is_dns_use=${is_dns_list[2]} ;;
+            cf | cloudflare) is_dns_use=${is_dns_list[3]} ;;
+            nosex | family) is_dns_use=${is_dns_list[4]} ;;
+            set) [[ $2 ]] && is_dns_use=${2,,} || ask string is_dns_use "请输入 DNS: " ;;
+            none) is_dns_use=none ;;
+            *) err "无法识别 DNS 参数" ;;
         esac
     else
         is_tmp_list=(${is_dns_list[@]})
@@ -202,13 +202,13 @@ dns_set() {
     fi
     is_dns_use_bak=$is_dns_use
     if [[ $is_dns_use == "none" ]]; then
-        cat <<<$(jq '.|.dns={}|del(.route.default_domain_resolver)' $is_config_json) >$is_config_json
+        cat <<< $(jq '.|.dns={}|del(.route.default_domain_resolver)' $is_config_json) > $is_config_json
     else
         if [[ $is_dns_new ]]; then
             dns_set_server $is_dns_use
-            cat <<<$(jq '.|.dns.servers=[{tag:"dns",type:"'$is_dns_type'",server:"'$is_dns_use'",domain_resolver:"local"},{tag:"local",type:"local"}]|.route.default_domain_resolver="dns"' $is_config_json) >$is_config_json
+            cat <<< $(jq '.|.dns.servers=[{tag:"dns",type:"'$is_dns_type'",server:"'$is_dns_use'",domain_resolver:"local"},{tag:"local",type:"local"}]|.route.default_domain_resolver="dns"' $is_config_json) > $is_config_json
         else
-            cat <<<$(jq '.dns.servers=[{address:"'$is_dns_use'",address_resolver:"local"},{tag:"local",address:"local"}]' $is_config_json) >$is_config_json
+            cat <<< $(jq '.dns.servers=[{address:"'$is_dns_use'",address_resolver:"local"},{tag:"local",address:"local"}]' $is_config_json) > $is_config_json
         fi
     fi
     manage restart &
@@ -216,19 +216,17 @@ dns_set() {
 }
 
 dns_set_server() {
-    if [[ $(grep '://' <<<$1) ]]; then
-        is_tmp_dns_set=($(awk -F '://|/' '{print $1, $2}' <<<${1,,}))
+    if [[ $(grep '://' <<< $1) ]]; then
+        is_tmp_dns_set=($(awk -F '://|/' '{print $1, $2}' <<< ${1,,}))
         case ${is_tmp_dns_set[0]} in
-        tcp | udp | tls | https | quic | h3)
-            is_dns_use=${is_tmp_dns_set[1]}
-            is_dns_type=${is_tmp_dns_set[0]}
-            ;;
-        *) err "无法识别 DNS 类型!" ;;
+            tcp | udp | tls | https | quic | h3)
+                is_dns_use=${is_tmp_dns_set[1]}
+                is_dns_type=${is_tmp_dns_set[0]}
+                ;;
+            *) err "无法识别 DNS 类型!" ;;
         esac
     else
         is_dns_use=$1
         is_dns_type=udp
     fi
 }
-
-

@@ -40,7 +40,7 @@ runtime_snapshot_ensure() {
         cp -rf -- "$is_caddy_conf/." "$snapshot_dir/caddy-conf/"
     fi
 
-    cat >"$snapshot_dir/meta.txt" <<EOF
+    cat > "$snapshot_dir/meta.txt" << EOF
 created_at=$(date '+%F %T %z')
 reason=$reason
 core_version=$is_core_ver
@@ -48,7 +48,7 @@ script_version=$is_sh_ver
 EOF
 
     # 保留最近 20 个快照，避免长期占用磁盘
-    ls -1dt "$backup_root"/* 2>/dev/null | tail -n +21 | xargs -r rm -rf --
+    ls -1dt "$backup_root"/* 2> /dev/null | tail -n +21 | xargs -r rm -rf --
 
     is_snapshot_id="$snapshot_id"
     msg "已创建配置快照: $(_green $snapshot_id)"
@@ -64,7 +64,7 @@ runtime_snapshot_list() {
     fi
 
     msg "\n------------- 配置快照列表 -------------"
-    ls -1dt "$backup_root"/* 2>/dev/null | while read -r d; do
+    ls -1dt "$backup_root"/* 2> /dev/null | while read -r d; do
         [[ -d $d ]] || continue
         msg "$(basename "$d")"
     done
@@ -82,7 +82,7 @@ runtime_snapshot_restore() {
     fi
 
     if [[ ! $target_id ]]; then
-        mapfile -t snapshot_items < <(ls -1dt "$backup_root"/* 2>/dev/null | xargs -r -n 1 basename)
+        mapfile -t snapshot_items < <(ls -1dt "$backup_root"/* 2> /dev/null | xargs -r -n 1 basename)
         if [[ ${#snapshot_items[@]} -eq 0 ]]; then
             err "没有可回滚的快照."
         fi
@@ -108,7 +108,7 @@ runtime_snapshot_restore() {
         if [[ $is_caddy && -d $target_dir/caddy-conf ]]; then
             msg "DRY-RUN: 将恢复 Caddy 目录: $is_caddy_conf"
         fi
-        msg "DRY-RUN: 将重启服务: $is_core $( [[ $is_caddy ]] && echo '和 caddy' )\n"
+        msg "DRY-RUN: 将重启服务: $is_core $([[ $is_caddy ]] && echo '和 caddy')\n"
         return
     fi
 
@@ -169,7 +169,7 @@ runtime_doctor() {
     fi
 
     if [[ -d $is_conf_dir ]]; then
-        conf_count=$(find "$is_conf_dir" -maxdepth 1 -type f -name '*.json' 2>/dev/null | wc -l)
+        conf_count=$(find "$is_conf_dir" -maxdepth 1 -type f -name '*.json' 2> /dev/null | wc -l)
         msg "[OK] 节点配置数量: $conf_count"
         ((ok++))
     else
@@ -178,7 +178,7 @@ runtime_doctor() {
         ((fail++))
     fi
 
-    if systemctl is-active --quiet "$is_core" 2>/dev/null; then
+    if systemctl is-active --quiet "$is_core" 2> /dev/null; then
         msg "[OK] 服务状态: $is_core 运行中"
         ((ok++))
     else
@@ -188,7 +188,7 @@ runtime_doctor() {
     fi
 
     if [[ $is_caddy ]]; then
-        if systemctl is-active --quiet caddy 2>/dev/null; then
+        if systemctl is-active --quiet caddy 2> /dev/null; then
             msg "[OK] 服务状态: caddy 运行中"
             ((ok++))
         else
@@ -199,7 +199,7 @@ runtime_doctor() {
     fi
 
     if [[ -x $is_core_bin && -f $is_config_json ]]; then
-        if $is_core_bin check -c "$is_config_json" -C "$is_conf_dir" >/dev/null 2>&1; then
+        if $is_core_bin check -c "$is_config_json" -C "$is_conf_dir" > /dev/null 2>&1; then
             msg "[OK] 配置校验: sing-box check 通过"
             ((ok++))
         else
@@ -209,7 +209,7 @@ runtime_doctor() {
         fi
     fi
 
-    host_ip=$(curl -s4m6 https://icanhazip.com 2>/dev/null || true)
+    host_ip=$(curl -s4m6 https://icanhazip.com 2> /dev/null || true)
     if [[ $host_ip ]]; then
         msg "[OK] 出站网络: 可访问公网 (IPv4)"
         ((ok++))
@@ -219,7 +219,7 @@ runtime_doctor() {
         ((warn_count++))
     fi
 
-    dns_test=$(wget -qO- -t1 -T6 --header="accept: application/dns-json" "https://one.one.one.one/dns-query?name=github.com&type=a" 2>/dev/null || true)
+    dns_test=$(wget -qO- -t1 -T6 --header="accept: application/dns-json" "https://one.one.one.one/dns-query?name=github.com&type=a" 2> /dev/null || true)
     if [[ $dns_test =~ \"Status\":0 ]]; then
         msg "[OK] DNS over HTTPS: one.one.one.one 可用"
         ((ok++))
@@ -229,8 +229,8 @@ runtime_doctor() {
         ((warn_count++))
     fi
 
-    if declare -F domain_collect_pool >/dev/null 2>&1; then
-        domain_count=$(domain_collect_pool global 2>/dev/null | wc -l)
+    if declare -F domain_collect_pool > /dev/null 2>&1; then
+        domain_count=$(domain_collect_pool global 2> /dev/null | wc -l)
         msg "[OK] Reality 域名池条目: $domain_count"
         ((ok++))
     fi
@@ -265,14 +265,36 @@ runtime_doctor() {
 runtime_manage() {
     if [[ $is_dont_auto_exit ]]; then return; fi
     case $1 in
-    1 | start) is_do=start; is_do_msg=启动; is_test_run=1 ;;
-    2 | stop) is_do=stop; is_do_msg=停止 ;;
-    3 | r | restart) is_do=restart; is_do_msg=重启; is_test_run=1 ;;
-    *) is_do=$1; is_do_msg=$1 ;;
+        1 | start)
+            is_do=start
+            is_do_msg=启动
+            is_test_run=1
+            ;;
+        2 | stop)
+            is_do=stop
+            is_do_msg=停止
+            ;;
+        3 | r | restart)
+            is_do=restart
+            is_do_msg=重启
+            is_test_run=1
+            ;;
+        *)
+            is_do=$1
+            is_do_msg=$1
+            ;;
     esac
     case $2 in
-    caddy) is_do_name=$2; is_run_bin=$is_caddy_bin; is_do_name_msg=Caddy ;;
-    *) is_do_name=$is_core; is_run_bin=$is_core_bin; is_do_name_msg=$is_core_name ;;
+        caddy)
+            is_do_name=$2
+            is_run_bin=$is_caddy_bin
+            is_do_name_msg=Caddy
+            ;;
+        *)
+            is_do_name=$is_core
+            is_run_bin=$is_core_bin
+            is_do_name_msg=$is_core_name
+            ;;
     esac
 
     if [[ $is_dry_run ]]; then
@@ -305,17 +327,24 @@ runtime_cron_task() {
     msg "3. 关闭: 停止所有自动维护任务"
     ask list is_do_cron ""
     case $REPLY in
-    1)
-        (crontab -l 2>/dev/null | grep -v -E "sing-box update core|/var/log/sing-box"; echo "0 3 * * 1 /usr/local/bin/sing-box update core >/dev/null 2>&1"; echo "0 4 * * * echo > /var/log/sing-box/access.log 2>/dev/null; echo > /var/log/sing-box/error.log 2>/dev/null") | crontab -
-        _green "\n已设置: 每周一自动更新核心，每天自动清空日志！(无人值守模式已开启)\n"
-        ;;
-    2)
-        (crontab -l 2>/dev/null | grep -v -E "sing-box update core|/var/log/sing-box"; echo "0 4 * * * echo > /var/log/sing-box/access.log 2>/dev/null; echo > /var/log/sing-box/error.log 2>/dev/null") | crontab -
-        _green "\n已设置: 每天凌晨 04:00 自动清空日志释放硬盘空间。\n"
-        ;;
-    3)
-        crontab -l 2>/dev/null | grep -v -E "sing-box update|/var/log/sing-box" | crontab -
-        _green "\n已关闭: 所有 Sing-box 相关的定时维护任务\n"
-        ;;
+        1)
+            (
+                crontab -l 2> /dev/null | grep -v -E "sing-box update core|/var/log/sing-box"
+                echo "0 3 * * 1 /usr/local/bin/sing-box update core >/dev/null 2>&1"
+                echo "0 4 * * * echo > /var/log/sing-box/access.log 2>/dev/null; echo > /var/log/sing-box/error.log 2>/dev/null"
+            ) | crontab -
+            _green "\n已设置: 每周一自动更新核心，每天自动清空日志！(无人值守模式已开启)\n"
+            ;;
+        2)
+            (
+                crontab -l 2> /dev/null | grep -v -E "sing-box update core|/var/log/sing-box"
+                echo "0 4 * * * echo > /var/log/sing-box/access.log 2>/dev/null; echo > /var/log/sing-box/error.log 2>/dev/null"
+            ) | crontab -
+            _green "\n已设置: 每天凌晨 04:00 自动清空日志释放硬盘空间。\n"
+            ;;
+        3)
+            crontab -l 2> /dev/null | grep -v -E "sing-box update|/var/log/sing-box" | crontab -
+            _green "\n已关闭: 所有 Sing-box 相关的定时维护任务\n"
+            ;;
     esac
 }

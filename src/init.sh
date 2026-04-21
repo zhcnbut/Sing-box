@@ -8,8 +8,14 @@ is_sh_ver="v1.0"
 is_sh_repo="LuoPoJunZi/sing-box-ev"
 
 # --- 1. 终端 UI 颜色定义 ---
-red='\e[31m'; yellow='\e[33m'; gray='\e[90m'; green='\e[92m'
-blue='\e[94m'; magenta='\e[95m'; cyan='\e[96m'; none='\e[0m'
+red='\e[31m'
+yellow='\e[33m'
+gray='\e[90m'
+green='\e[92m'
+blue='\e[94m'
+magenta='\e[95m'
+cyan='\e[96m'
+none='\e[0m'
 
 _red() { echo -e "${red}$@${none}"; }
 _blue() { echo -e "${blue}$@${none}"; }
@@ -56,7 +62,7 @@ is_caddy_dir="/etc/caddy"
 is_caddy_repo="caddyserver/caddy"
 is_caddyfile="$is_caddy_dir/Caddyfile"
 is_caddy_conf="$is_caddy_dir/$author"
-is_caddy_service=$(systemctl list-units --full -all 2>/dev/null | grep caddy.service)
+is_caddy_service=$(systemctl list-units --full -all 2> /dev/null | grep caddy.service)
 is_http_port=80
 is_https_port=443
 
@@ -75,20 +81,20 @@ esac
 load utils.sh
 
 # --- 4. 运行状态与前置检查 ---
-is_core_ver=$($is_core_bin version 2>/dev/null | head -n1 | cut -d " " -f3)
+is_core_ver=$($is_core_bin version 2> /dev/null | head -n1 | cut -d " " -f3)
 
 # 自动生成缺失的 TLS 证书 (仅用于内部交互)
 is_tls_cer="$is_core_dir/bin/tls.cer"
 is_tls_key="$is_core_dir/bin/tls.key"
 if [[ ! -f $is_tls_cer || ! -f $is_tls_key ]]; then
     is_tls_tmp="${is_tls_key/key/tmp}"
-    $is_core_bin generate tls-keypair tls -m 456 > "$is_tls_tmp" 2>/dev/null
+    $is_core_bin generate tls-keypair tls -m 456 > "$is_tls_tmp" 2> /dev/null
     awk '/BEGIN PRIVATE KEY/,/END PRIVATE KEY/' "$is_tls_tmp" > "$is_tls_key"
     awk '/BEGIN CERTIFICATE/,/END CERTIFICATE/' "$is_tls_tmp" > "$is_tls_cer"
     rm -f "$is_tls_tmp"
 fi
 
-if systemctl is-active --quiet "$is_core" 2>/dev/null || pgrep -f "$is_core_bin" >/dev/null; then
+if systemctl is-active --quiet "$is_core" 2> /dev/null || pgrep -f "$is_core_bin" > /dev/null; then
     is_core_status=$(_green "running")
 else
     is_core_status=$(_red_bg "stopped")
@@ -100,15 +106,15 @@ if [[ -f $is_caddy_bin && -d $is_caddy_dir && $is_caddy_service ]]; then
     # 修复 Caddy 启动参数
     if ! grep -q '\-\-adapter caddyfile' /lib/systemd/system/caddy.service; then
         install_service caddy
-        systemctl restart caddy &>/dev/null &
+        systemctl restart caddy &> /dev/null &
     fi
-    is_caddy_ver=$($is_caddy_bin version 2>/dev/null | head -n1 | cut -d " " -f1)
-    is_tmp_http_port=$(grep -E '^ {2,}http_port|^http_port' "$is_caddyfile" 2>/dev/null | grep -oE '[0-9]+')
-    is_tmp_https_port=$(grep -E '^ {2,}https_port|^https_port' "$is_caddyfile" 2>/dev/null | grep -oE '[0-9]+')
+    is_caddy_ver=$($is_caddy_bin version 2> /dev/null | head -n1 | cut -d " " -f1)
+    is_tmp_http_port=$(grep -E '^ {2,}http_port|^http_port' "$is_caddyfile" 2> /dev/null | grep -oE '[0-9]+')
+    is_tmp_https_port=$(grep -E '^ {2,}https_port|^https_port' "$is_caddyfile" 2> /dev/null | grep -oE '[0-9]+')
     [[ $is_tmp_http_port ]] && is_http_port=$is_tmp_http_port
     [[ $is_tmp_https_port ]] && is_https_port=$is_tmp_https_port
-    
-    if systemctl is-active --quiet caddy 2>/dev/null || pgrep -f "$is_caddy_bin" >/dev/null; then
+
+    if systemctl is-active --quiet caddy 2> /dev/null || pgrep -f "$is_caddy_bin" > /dev/null; then
         is_caddy_status=$(_green "running")
     else
         is_caddy_status=$(_red_bg "stopped")
@@ -118,5 +124,3 @@ fi
 
 # --- 5. 加载核心业务逻辑 ---
 load core.sh
-
-
