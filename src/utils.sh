@@ -3,6 +3,16 @@
 # Sing-box-EV Utility Toolbox
 # ==========================================
 
+load_lib() {
+    local lib_name
+    for lib_name in manifest systemd firewall tunnel; do
+        . "$is_sh_dir/src/lib/${lib_name}.sh"
+    done
+}
+
+load_lib
+unset -f load_lib
+
 # ----------------- Download 模块 -----------------
 get_latest_version() {
     case $1 in
@@ -68,58 +78,6 @@ download_file() {
         rm -rf -- "$tmpdir"
         err "\n下载 ${name} 失败.\n"
     fi
-}
-
-# ----------------- Systemd 模块 -----------------
-install_service() {
-    case $1 in
-        $is_core)
-            cat > /lib/systemd/system/$is_core.service <<< "
-[Unit]
-Description=$is_core_name Service
-Documentation=https://sing-box.sagernet.org/
-After=network.target nss-lookup.target
-
-[Service]
-User=root
-NoNewPrivileges=true
-ExecStart=$is_core_bin run -c $is_config_json -C $is_conf_dir
-Restart=on-failure
-RestartPreventExitStatus=23
-LimitNPROC=10000
-LimitNOFILE=1048576
-PrivateTmp=true
-ProtectSystem=full
-
-[Install]
-WantedBy=multi-user.target"
-            ;;
-        caddy)
-            cat > /lib/systemd/system/caddy.service <<< "
-[Unit]
-Description=Caddy
-Documentation=https://caddyserver.com/docs/
-After=network.target network-online.target
-Requires=network-online.target
-
-[Service]
-Type=notify
-User=root
-Group=root
-ExecStart=$is_caddy_bin run --environ --config $is_caddyfile --adapter caddyfile
-ExecReload=$is_caddy_bin reload --config $is_caddyfile --adapter caddyfile
-TimeoutStopSec=5s
-LimitNPROC=10000
-LimitNOFILE=1048576
-PrivateTmp=true
-ProtectSystem=full
-
-[Install]
-WantedBy=multi-user.target"
-            ;;
-    esac
-    systemctl enable $1 > /dev/null 2>&1
-    systemctl daemon-reload > /dev/null 2>&1
 }
 
 # ----------------- BBR 模块 -----------------
