@@ -5,7 +5,7 @@
 
 load_lib() {
     local lib_name
-    for lib_name in manifest systemd firewall tunnel; do
+    for lib_name in manifest fs json systemd firewall net tunnel; do
         . "$is_sh_dir/src/lib/${lib_name}.sh"
     done
 }
@@ -119,10 +119,10 @@ log_set() {
                 ;;
             none)
                 rm -f -- "$is_log_dir"/*.log 2> /dev/null
-                cat <<< $(jq '.log={"disabled":true}' $is_config_json) > $is_config_json
+                json_write_config "$(jq '.log={"disabled":true}' $is_config_json)"
                 ;;
             *)
-                cat <<< $(jq '.log={output:"/var/log/'$is_core'/access.log",level:"'$is_log_level_use'","timestamp":true}' $is_config_json) > $is_config_json
+                json_write_config "$(jq '.log={output:"/var/log/'$is_core'/access.log",level:"'$is_log_level_use'","timestamp":true}' $is_config_json)"
                 ;;
         esac
 
@@ -163,13 +163,13 @@ dns_set() {
     fi
     is_dns_use_bak=$is_dns_use
     if [[ $is_dns_use == "none" ]]; then
-        cat <<< $(jq '.|.dns={}|del(.route.default_domain_resolver)' $is_config_json) > $is_config_json
+        json_write_config "$(jq '.|.dns={}|del(.route.default_domain_resolver)' $is_config_json)"
     else
         if [[ $is_dns_new ]]; then
             dns_set_server $is_dns_use
-            cat <<< $(jq '.|.dns.servers=[{tag:"dns",type:"'$is_dns_type'",server:"'$is_dns_use'",domain_resolver:"local"},{tag:"local",type:"local"}]|.route.default_domain_resolver="dns"' $is_config_json) > $is_config_json
+            json_write_config "$(jq '.|.dns.servers=[{tag:"dns",type:"'$is_dns_type'",server:"'$is_dns_use'",domain_resolver:"local"},{tag:"local",type:"local"}]|.route.default_domain_resolver="dns"' $is_config_json)"
         else
-            cat <<< $(jq '.dns.servers=[{address:"'$is_dns_use'",address_resolver:"local"},{tag:"local",address:"local"}]' $is_config_json) > $is_config_json
+            json_write_config "$(jq '.dns.servers=[{address:"'$is_dns_use'",address_resolver:"local"},{tag:"local",address:"local"}]' $is_config_json)"
         fi
     fi
     manage restart &

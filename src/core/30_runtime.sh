@@ -199,7 +199,7 @@ runtime_doctor() {
     fi
 
     if [[ -x $is_core_bin && -f $is_config_json ]]; then
-        if $is_core_bin check -c "$is_config_json" -C "$is_conf_dir" > /dev/null 2>&1; then
+        if json_check_core_config; then
             msg "[OK] 配置校验: sing-box check 通过"
             ((ok++))
         else
