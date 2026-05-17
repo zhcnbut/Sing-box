@@ -44,13 +44,30 @@ check_lib_targets() {
     done
 }
 
+check_runtime_util_targets() {
+    local util_line util
+
+    util_line="$(sed -nE 's/.*for util_name in ([^;]+); do.*/\1/p' src/utils.sh | head -n 1)"
+    if [[ -z $util_line ]]; then
+        echo "[structure] unable to find src/utils.sh runtime util list"
+        fail=1
+        return
+    fi
+
+    for util in $util_line; do
+        check_file "src/core/utils/${util}.sh"
+    done
+}
+
 check_source_targets src/core/25_domain.sh
 check_source_targets src/core/30_runtime.sh
 check_source_targets src/core/40_node_query.sh
 check_source_targets src/core/50_node_write.sh
 check_source_targets src/core/node/add.sh
 check_source_targets src/core/node/change.sh
+check_source_targets src/core/70_admin.sh
 check_lib_targets
+check_runtime_util_targets
 
 if [[ $fail -ne 0 ]]; then
     echo "[structure] failed"

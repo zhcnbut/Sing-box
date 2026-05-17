@@ -1,0 +1,58 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+SB_BIN="${SB_BIN:-sb}"
+CONF_DIR="${CONF_DIR:-/etc/sing-box/conf}"
+ALLOW_WRITES="${ALLOW_WRITES:-0}"
+
+if ! command -v "$SB_BIN" > /dev/null 2>&1; then
+    echo "[regression-cli] command not found: $SB_BIN"
+    echo "[regression-cli] set SB_BIN=/path/to/sb or install the script first"
+    exit 1
+fi
+
+run() {
+    echo
+    echo "[regression-cli] >>> $*"
+    "$@"
+}
+
+first_config_name() {
+    find "$CONF_DIR" -maxdepth 1 -type f -name '*.json' -printf '%f\n' 2> /dev/null | sort | head -n 1
+}
+
+echo "[regression-cli] using command: $SB_BIN"
+
+# Read-only commands. These should be safe on production hosts.
+run "$SB_BIN" help
+run "$SB_BIN" version
+run "$SB_BIN" status
+run "$SB_BIN" doctor
+run "$SB_BIN" backup list
+run "$SB_BIN" domain list
+run "$SB_BIN" domain pick
+run "$SB_BIN" all
+
+config_name="$(first_config_name || true)"
+if [[ -n $config_name ]]; then
+    run "$SB_BIN" info "$config_name"
+    run "$SB_BIN" url "$config_name"
+    run "$SB_BIN" dry-run change "$config_name" port auto
+    run "$SB_BIN" dry-run change "$config_name" sni auto
+else
+    echo
+    echo "[regression-cli] no existing config found under $CONF_DIR; skipping info/url/change dry-run checks"
+fi
+
+if [[ $ALLOW_WRITES == "1" ]]; then
+    echo
+    echo "[regression-cli] write checks enabled"
+    run "$SB_BIN" backup create regression-cli
+    run "$SB_BIN" backup list
+else
+    echo
+    echo "[regression-cli] write checks skipped; set ALLOW_WRITES=1 on a disposable VPS to include backup create"
+fi
+
+echo
+echo "[regression-cli] checks passed"
