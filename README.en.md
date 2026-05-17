@@ -116,16 +116,15 @@ sb status
 │  │  ├─ manifest.sh / systemd.sh / firewall.sh
 │  │  └─ crypto.sh / tunnel.sh
 │  └─ core
-│     ├─ 00_env.sh
-│     ├─ 10_ui.sh
-│     ├─ 20_validate.sh
-│     ├─ 60_sub.sh
 │     ├─ admin               # menu, CLI dispatch, update/uninstall
 │     ├─ domain              # Reality domain pool
+│     ├─ env                 # protocol lists, defaults, built-in domain pool
 │     ├─ node                # node add/change/delete flows
 │     ├─ query               # config parsing, display, URLs
 │     ├─ runtime             # doctor, snapshots, rollback, service, cron
+│     ├─ sub                 # subscription generation
 │     ├─ ui                  # interactive prompts
+│     ├─ validate            # input and port validation
 │     └─ utils               # download, BBR, logs, DNS
 ├─ scripts
 │  ├─ check-structure.sh
@@ -142,19 +141,19 @@ sb status
 
 ### 5.1 Module Responsibility Quick Map
 
-- `00_env.sh`: constants and defaults
-- `10_ui.sh`: output and UI helpers
-- `20_validate.sh`: input/port validation
-- `60_sub.sh`: subscription generation
 - `src/core/domain/`: Reality domain pool, weights, health checks, auto-pick
 - `src/core/runtime/`: diagnostics, snapshots, rollback, service, cron
 - `src/core/query/`: config parsing, node display, URL/QR output
 - `src/core/node/`: node add/change/delete flows
 - `src/core/admin/`: menu, CLI dispatch, update, uninstall
+- `src/core/env/`: constants, protocol lists, defaults
+- `src/core/ui/`: output, interactive prompts, pause, footer
+- `src/core/validate/`: input and port validation
+- `src/core/sub/`: subscription generation
 - `src/lib/`: shared install-time and runtime helper libraries
 - `src/core/utils/`: runtime utility helpers for download, BBR, logs, and DNS
 
-Note: compatibility loaders `25_domain.sh`, `30_runtime.sh`, `40_node_query.sh`, `50_node_write.sh`, and `70_admin.sh` have been removed. `src/core.sh` now loads the new module directories directly. `00_env.sh`, `10_ui.sh`, `20_validate.sh`, and `60_sub.sh` are still standalone modules.
+Note: legacy numbered modules have been removed. `src/core.sh` now loads the directory-based modules directly.
 
 ---
 
@@ -195,7 +194,7 @@ Example: changing Reality add behavior
 1. Check command routing in `src/core/admin/dispatch.sh`
 2. Edit input/write logic under `src/core/node/`
 3. Sync render and URL under `src/core/query/`
-4. Update defaults in `00_env.sh` if needed
+4. Update defaults under `src/core/env/` if needed
 5. Update docs in `src/help.sh`
 
 ### 7.3 Local Checks
@@ -277,10 +276,10 @@ Before release, verify:
 
 ### Add/change protocol fields
 
-- Defaults: `src/core/00_env.sh`
+- Defaults: `src/core/env/`
 - Write path: `src/core/node/`
 - Display/URL path: `src/core/query/`
-- Validation: `src/core/20_validate.sh`
+- Validation: `src/core/validate/`
 
 ### Change runtime behavior
 

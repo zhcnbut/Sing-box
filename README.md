@@ -117,16 +117,15 @@ sb status   # 查看运行状态
 │  │  ├─ manifest.sh / systemd.sh / firewall.sh
 │  │  └─ crypto.sh / tunnel.sh
 │  └─ core
-│     ├─ 00_env.sh
-│     ├─ 10_ui.sh
-│     ├─ 20_validate.sh
-│     ├─ 60_sub.sh
 │     ├─ admin               # 菜单、CLI 分发、更新/卸载
 │     ├─ domain              # Reality 域名池
+│     ├─ env                 # 协议列表、默认值、内置域名池
 │     ├─ node                # 节点新增/修改/删除
 │     ├─ query               # 配置解析、展示、URL
 │     ├─ runtime             # doctor、快照、回滚、服务、cron
+│     ├─ sub                 # 订阅生成
 │     ├─ ui                  # 交互输入
+│     ├─ validate            # 输入和端口校验
 │     └─ utils               # 下载、BBR、日志、DNS
 ├─ scripts
 │  ├─ check-structure.sh
@@ -143,19 +142,19 @@ sb status   # 查看运行状态
 
 ### 5.1 模块职责速查
 
-- `00_env.sh`：常量、协议列表、默认值
-- `10_ui.sh`：UI 输出、暂停、页脚
-- `20_validate.sh`：输入/端口校验
-- `60_sub.sh`：订阅生成
 - `src/core/domain/`：Reality 域名池、权重、健康检查、自动选择
 - `src/core/runtime/`：诊断、快照、回滚、服务、Cron
 - `src/core/query/`：配置解析、节点展示、URL/二维码输出
 - `src/core/node/`：节点新增、修改、删除
 - `src/core/admin/`：菜单、CLI 分发、更新、卸载
+- `src/core/env/`：常量、协议列表、默认值
+- `src/core/ui/`：UI 输出、交互输入、暂停、页脚
+- `src/core/validate/`：输入和端口校验
+- `src/core/sub/`：订阅生成
 - `src/lib/`：安装期与运行期共享工具库
 - `src/core/utils/`：下载、BBR、日志、DNS 等运行期工具
 
-说明：`25_domain.sh`、`30_runtime.sh`、`40_node_query.sh`、`50_node_write.sh`、`70_admin.sh` 的兼容加载壳已经移除，现在由 `src/core.sh` 直接加载新目录模块。`00_env.sh`、`10_ui.sh`、`20_validate.sh`、`60_sub.sh` 当前仍是独立模块。
+说明：旧编号模块已经移除，现在由 `src/core.sh` 直接加载目录化模块。
 
 ---
 
@@ -203,7 +202,7 @@ cd sing-box-ev
 1. 在 `src/core/admin/dispatch.sh` 确认命令入口
 2. 在 `src/core/node/` 修改入参解析和写入逻辑
 3. 在 `src/core/query/` 确认 URL/展示同步
-4. 若新增默认项，更新 `00_env.sh`
+4. 若新增默认项，更新 `src/core/env/`
 5. 更新帮助文档（`help.sh`）
 
 ### 7.3 本地检查
@@ -285,10 +284,10 @@ ALLOW_WRITES=1 bash scripts/regression-cli.sh
 
 ### 新增协议字段
 
-- 默认值与列表：`00_env.sh`
+- 默认值与列表：`src/core/env/`
 - 写入：`src/core/node/`
 - 展示/URL：`src/core/query/`
-- 校验：`20_validate.sh`
+- 校验：`src/core/validate/`
 
 ### 服务行为修改
 

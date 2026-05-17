@@ -19,15 +19,15 @@ Thanks for helping improve Sing-box-EV.
 ## Core Module Layout
 
 - `src/core.sh`: compatibility wrappers and module loading.
-- `src/core/00_env.sh`: shared constant arrays/defaults.
-- `src/core/10_ui.sh`: UI helpers.
-- `src/core/20_validate.sh`: validation helpers.
-- `src/core/60_sub.sh`: subscription generation.
 - `src/core/admin/`: menu/admin dispatch, update, uninstall.
 - `src/core/domain/`: Reality domain pool operations.
+- `src/core/env/`: shared constant arrays/defaults.
 - `src/core/node/`: create/change/delete flows.
 - `src/core/query/`: read/query/URL flows.
 - `src/core/runtime/`: runtime/service/doctor/snapshot operations.
+- `src/core/sub/`: subscription generation.
+- `src/core/ui/`: UI and prompt helpers.
+- `src/core/validate/`: validation helpers.
 - `src/core/utils/`: runtime utility helpers.
 
 ## Quality Checks

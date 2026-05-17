@@ -2,10 +2,10 @@
 # Sing-box-EV Core Business Logic
 # ==========================================
 
-. "$is_sh_dir/src/core/00_env.sh"
-. "$is_sh_dir/src/core/10_ui.sh"
+. "$is_sh_dir/src/core/env/defaults.sh"
+. "$is_sh_dir/src/core/ui/output.sh"
 . "$is_sh_dir/src/core/ui/prompt.sh"
-. "$is_sh_dir/src/core/20_validate.sh"
+. "$is_sh_dir/src/core/validate/input.sh"
 . "$is_sh_dir/src/core/domain/store.sh"
 . "$is_sh_dir/src/core/domain/health.sh"
 . "$is_sh_dir/src/core/domain/pool.sh"
@@ -24,7 +24,7 @@
 . "$is_sh_dir/src/core/node/change.sh"
 . "$is_sh_dir/src/core/node/delete.sh"
 . "$is_sh_dir/src/core/node/add.sh"
-. "$is_sh_dir/src/core/60_sub.sh"
+. "$is_sh_dir/src/core/sub/generate.sh"
 . "$is_sh_dir/src/core/admin/update.sh"
 . "$is_sh_dir/src/core/admin/uninstall.sh"
 . "$is_sh_dir/src/core/admin/menu.sh"
