@@ -119,14 +119,19 @@ sb status
 │     ├─ 00_env.sh
 │     ├─ 10_ui.sh
 │     ├─ 20_validate.sh
-│     ├─ 25_domain.sh
-│     ├─ 30_runtime.sh
-│     ├─ 40_node_query.sh
-│     ├─ 50_node_write.sh
+│     ├─ 25_domain.sh        # compatibility loader -> domain/
+│     ├─ 30_runtime.sh       # compatibility loader -> runtime/
+│     ├─ 40_node_query.sh    # compatibility loader -> query/
+│     ├─ 50_node_write.sh    # compatibility loader -> node/
 │     ├─ 60_sub.sh
-│     ├─ 70_admin.sh
-│     ├─ admin / domain / node / query / runtime / ui
-│     └─ utils
+│     ├─ 70_admin.sh         # compatibility loader -> admin/
+│     ├─ admin               # menu, CLI dispatch, update/uninstall
+│     ├─ domain              # Reality domain pool
+│     ├─ node                # node add/change/delete flows
+│     ├─ query               # config parsing, display, URLs
+│     ├─ runtime             # doctor, snapshots, rollback, service, cron
+│     ├─ ui                  # interactive prompts
+│     └─ utils               # download, BBR, logs, DNS
 ├─ scripts
 │  ├─ check-structure.sh
 │  ├─ lint.sh
@@ -153,6 +158,8 @@ sb status
 - `70_admin.sh`: compatibility loader for menu and CLI dispatch in `src/core/admin/`
 - `src/lib/`: shared install-time and runtime helper libraries
 - `src/core/utils/`: runtime utility helpers for download, BBR, logs, and DNS
+
+Note: `25_domain.sh`, `30_runtime.sh`, `40_node_query.sh`, `50_node_write.sh`, and `70_admin.sh` have already been split and are now compatibility loaders. They remain in place to preserve load order and stable legacy entry points. `00_env.sh`, `10_ui.sh`, `20_validate.sh`, and `60_sub.sh` are still standalone modules.
 
 ---
 

@@ -120,14 +120,19 @@ sb status   # 查看运行状态
 │     ├─ 00_env.sh
 │     ├─ 10_ui.sh
 │     ├─ 20_validate.sh
-│     ├─ 25_domain.sh
-│     ├─ 30_runtime.sh
-│     ├─ 40_node_query.sh
-│     ├─ 50_node_write.sh
+│     ├─ 25_domain.sh        # 兼容加载壳 -> domain/
+│     ├─ 30_runtime.sh       # 兼容加载壳 -> runtime/
+│     ├─ 40_node_query.sh    # 兼容加载壳 -> query/
+│     ├─ 50_node_write.sh    # 兼容加载壳 -> node/
 │     ├─ 60_sub.sh
-│     ├─ 70_admin.sh
-│     ├─ admin / domain / node / query / runtime / ui
-│     └─ utils
+│     ├─ 70_admin.sh         # 兼容加载壳 -> admin/
+│     ├─ admin               # 菜单、CLI 分发、更新/卸载
+│     ├─ domain              # Reality 域名池
+│     ├─ node                # 节点新增/修改/删除
+│     ├─ query               # 配置解析、展示、URL
+│     ├─ runtime             # doctor、快照、回滚、服务、cron
+│     ├─ ui                  # 交互输入
+│     └─ utils               # 下载、BBR、日志、DNS
 ├─ scripts
 │  ├─ check-structure.sh
 │  ├─ lint.sh
@@ -154,6 +159,8 @@ sb status   # 查看运行状态
 - `70_admin.sh`：管理入口兼容加载壳，菜单和 CLI 分发在 `src/core/admin/`
 - `src/lib/`：安装期与运行期共享工具库
 - `src/core/utils/`：下载、BBR、日志、DNS 等运行期工具
+
+说明：`25_domain.sh`、`30_runtime.sh`、`40_node_query.sh`、`50_node_write.sh`、`70_admin.sh` 已经拆解为兼容加载壳；保留这些文件是为了保持加载顺序和旧入口稳定。`00_env.sh`、`10_ui.sh`、`20_validate.sh`、`60_sub.sh` 当前仍是独立模块。
 
 ---
 
