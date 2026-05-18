@@ -103,41 +103,82 @@ sb status   # 查看运行状态
 
 ```text
 .
-├─ install.sh
-├─ sing-box.sh
-├─ src
-│  ├─ init.sh
-│  ├─ core.sh
-│  ├─ utils.sh
-│  ├─ help.sh
-│  ├─ caddy.sh
-│  ├─ import.sh
-│  ├─ lib
-│  │  ├─ fs.sh / json.sh / net.sh
-│  │  ├─ manifest.sh / systemd.sh / firewall.sh
-│  │  └─ crypto.sh / tunnel.sh
-│  └─ core
-│     ├─ admin               # 菜单、CLI 分发、更新/卸载
-│     ├─ domain              # Reality 域名池
-│     ├─ env                 # 协议列表、默认值、内置域名池
-│     ├─ node                # 节点新增/修改/删除
-│     ├─ query               # 配置解析、展示、URL
-│     ├─ runtime             # doctor、快照、回滚、服务、cron
-│     ├─ sub                 # 订阅生成
-│     ├─ ui                  # 交互输入
-│     ├─ validate            # 输入和端口校验
-│     └─ utils               # 下载、BBR、日志、DNS
-├─ scripts
-│  ├─ check-structure.sh
-│  ├─ lint.sh
-│  ├─ regression-cli.sh
-│  ├─ smoke.sh
-│  └─ smoke-reality.sh
+├─ install.sh                         # 一键安装入口，负责下载、安装、初始化服务
+├─ sing-box.sh                        # 安装后的 CLI 入口，最终调用 src/init.sh
+├─ README.md                          # 中文说明文档
+├─ README.en.md                       # English documentation
+├─ CONTRIBUTING.md                    # 贡献与开发约定
 ├─ docs
-│  └─ VPS_REGRESSION.md
-└─ .github/workflows
-   ├─ lint.yml
-   └─ release.yml
+│  └─ VPS_REGRESSION.md               # 真实 VPS 回归测试清单
+├─ scripts
+│  ├─ check-structure.sh              # 检查模块加载目标是否存在
+│  ├─ lint.sh                         # 本地 lint 汇总入口
+│  ├─ regression-cli.sh               # 可重复执行的 CLI 回归检查
+│  ├─ smoke.sh                        # 基础 smoke 检查
+│  └─ smoke-reality.sh                # Reality 专项 smoke 检查
+├─ .github
+│  └─ workflows
+│     ├─ lint.yml                     # GitHub Actions: Shell Lint
+│     └─ release.yml                  # GitHub Actions: Auto Release
+└─ src
+   ├─ init.sh                         # 初始化全局变量、路径、运行状态并加载 core
+   ├─ core.sh                         # 模块加载顺序 + 对外兼容包装函数
+   ├─ utils.sh                        # 安装期/运行期共享工具加载入口
+   ├─ help.sh                         # help/about 文档输出
+   ├─ caddy.sh                        # Caddy 配置生成与维护
+   ├─ import.sh                       # 外部配置导入逻辑
+   ├─ lib                             # 跨安装期和运行期复用的公共库
+   │  ├─ crypto.sh                    # UUID、Reality keypair 等生成辅助
+   │  ├─ firewall.sh                  # 防火墙端口记录与清理
+   │  ├─ fs.sh                        # 文件/目录安全操作与清单记录
+   │  ├─ json.sh                      # jq 写入、配置校验辅助
+   │  ├─ manifest.sh                  # 安装清单记录与读取
+   │  ├─ net.sh                       # IP 获取、端口检测、端口分配
+   │  ├─ systemd.sh                   # systemd service 写入与清理
+   │  └─ tunnel.sh                    # Cloudflare Tunnel 辅助
+   └─ core                            # 业务核心目录，按职责拆分
+      ├─ admin
+      │  ├─ dispatch.sh               # CLI/menu 统一命令分发
+      │  ├─ menu.sh                   # 主菜单展示和输入
+      │  ├─ menu_actions.sh           # 菜单选项到命令的映射
+      │  ├─ uninstall.sh              # 完全卸载流程
+      │  └─ update.sh                 # core/script/caddy 更新
+      ├─ domain
+      │  ├─ cli.sh                    # sb domain 子命令
+      │  ├─ health.sh                 # DNS/TCP/TLS 健康检查和缓存
+      │  ├─ pick.sh                   # Reality SNI 自动选择
+      │  ├─ pool.sh                   # 内置/自定义/禁用域名聚合
+      │  └─ store.sh                  # 域名池本地文件初始化
+      ├─ env
+      │  └─ defaults.sh               # 协议列表、修改项、内置 Reality 域名池
+      ├─ node
+      │  ├─ add.sh                    # 添加节点主流程
+      │  ├─ create.sh                 # 写入 sing-box JSON 配置
+      │  ├─ delete.sh                 # 删除节点配置
+      │  ├─ change.sh                 # 修改节点主流程
+      │  ├─ add/prepare.sh            # 添加节点前的参数准备
+      │  └─ change/actions.sh         # 端口/密钥/SNI 等修改动作
+      ├─ query
+      │  ├─ info.sh                   # 节点信息展示
+      │  ├─ parse.sh                  # 配置读取和字段解析
+      │  ├─ protocol.sh               # 协议 JSON 片段准备
+      │  └─ url.sh                    # URL/二维码/全部节点输出
+      ├─ runtime
+      │  ├─ cron.sh                   # 自动维护任务
+      │  ├─ doctor.sh                 # 系统诊断
+      │  ├─ rollback.sh               # 快照回滚
+      │  ├─ service.sh                # 启动/停止/重启服务
+      │  └─ snapshot.sh               # 快照创建和列表
+      ├─ sub/generate.sh              # 订阅生成
+      ├─ ui
+      │  ├─ output.sh                 # 输出、列表、暂停、页脚
+      │  └─ prompt.sh                 # 协议选择、配置选择、通用输入
+      ├─ utils
+      │  ├─ bbr.sh                    # BBR 开启
+      │  ├─ dns.sh                    # DNS 设置
+      │  ├─ download.sh               # 版本获取与下载
+      │  └─ log.sh                    # 日志查看
+      └─ validate/input.sh            # 域名、端口、UUID、路径校验
 ```
 
 ### 5.1 模块职责速查
@@ -146,7 +187,7 @@ sb status   # 查看运行状态
 - `src/core/runtime/`：诊断、快照、回滚、服务、Cron
 - `src/core/query/`：配置解析、节点展示、URL/二维码输出
 - `src/core/node/`：节点新增、修改、删除
-- `src/core/admin/`：菜单、CLI 分发、更新、卸载
+- `src/core/admin/`：菜单展示、菜单动作映射、CLI 分发、更新、卸载
 - `src/core/env/`：常量、协议列表、默认值
 - `src/core/ui/`：UI 输出、交互输入、暂停、页脚
 - `src/core/validate/`：输入和端口校验
@@ -154,7 +195,11 @@ sb status   # 查看运行状态
 - `src/lib/`：安装期与运行期共享工具库
 - `src/core/utils/`：下载、BBR、日志、DNS 等运行期工具
 
-说明：旧编号模块已经移除，现在由 `src/core.sh` 直接加载目录化模块。
+说明：
+
+- 旧编号模块已经移除，现在由 `src/core.sh` 直接加载目录化模块。
+- 主菜单和命令层已经分离：`menu.sh` 只负责显示和读取选择，`menu_actions.sh` 把选择转换成命令，`dispatch.sh` 统一执行命令。
+- 新增能力时优先放到对应模块目录，不建议继续新增大而全的单文件。
 
 ---
 

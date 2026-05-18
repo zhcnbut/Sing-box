@@ -102,41 +102,82 @@ sb status
 
 ```text
 .
-├─ install.sh
-├─ sing-box.sh
-├─ src
-│  ├─ init.sh
-│  ├─ core.sh
-│  ├─ utils.sh
-│  ├─ help.sh
-│  ├─ caddy.sh
-│  ├─ import.sh
-│  ├─ lib
-│  │  ├─ fs.sh / json.sh / net.sh
-│  │  ├─ manifest.sh / systemd.sh / firewall.sh
-│  │  └─ crypto.sh / tunnel.sh
-│  └─ core
-│     ├─ admin               # menu, CLI dispatch, update/uninstall
-│     ├─ domain              # Reality domain pool
-│     ├─ env                 # protocol lists, defaults, built-in domain pool
-│     ├─ node                # node add/change/delete flows
-│     ├─ query               # config parsing, display, URLs
-│     ├─ runtime             # doctor, snapshots, rollback, service, cron
-│     ├─ sub                 # subscription generation
-│     ├─ ui                  # interactive prompts
-│     ├─ validate            # input and port validation
-│     └─ utils               # download, BBR, logs, DNS
-├─ scripts
-│  ├─ check-structure.sh
-│  ├─ lint.sh
-│  ├─ regression-cli.sh
-│  ├─ smoke.sh
-│  └─ smoke-reality.sh
+├─ install.sh                         # one-click installer and bootstrap entry
+├─ sing-box.sh                        # installed CLI entry; loads src/init.sh
+├─ README.md                          # Chinese documentation
+├─ README.en.md                       # English documentation
+├─ CONTRIBUTING.md                    # contribution and development rules
 ├─ docs
-│  └─ VPS_REGRESSION.md
-└─ .github/workflows
-   ├─ lint.yml
-   └─ release.yml
+│  └─ VPS_REGRESSION.md               # real VPS regression checklist
+├─ scripts
+│  ├─ check-structure.sh              # validates sourced module targets
+│  ├─ lint.sh                         # local lint wrapper
+│  ├─ regression-cli.sh               # repeatable CLI regression checks
+│  ├─ smoke.sh                        # basic smoke checks
+│  └─ smoke-reality.sh                # Reality-focused smoke checks
+├─ .github
+│  └─ workflows
+│     ├─ lint.yml                     # GitHub Actions: Shell Lint
+│     └─ release.yml                  # GitHub Actions: Auto Release
+└─ src
+   ├─ init.sh                         # initializes paths, runtime state, and core loading
+   ├─ core.sh                         # module loading order and compatibility wrappers
+   ├─ utils.sh                        # shared helper loader for install/runtime flows
+   ├─ help.sh                         # help/about output
+   ├─ caddy.sh                        # Caddy configuration generation and maintenance
+   ├─ import.sh                       # external configuration import
+   ├─ lib                             # shared libraries used by installer and runtime
+   │  ├─ crypto.sh                    # UUID and Reality keypair helpers
+   │  ├─ firewall.sh                  # firewall port tracking and cleanup
+   │  ├─ fs.sh                        # safe file/dir operations and manifest helpers
+   │  ├─ json.sh                      # jq writes and config validation helpers
+   │  ├─ manifest.sh                  # install manifest read/write helpers
+   │  ├─ net.sh                       # IP, port checks, and port allocation
+   │  ├─ systemd.sh                   # systemd service writes and cleanup
+   │  └─ tunnel.sh                    # Cloudflare Tunnel helpers
+   └─ core                            # business core split by responsibility
+      ├─ admin
+      │  ├─ dispatch.sh               # unified CLI/menu command dispatch
+      │  ├─ menu.sh                   # main menu rendering and input
+      │  ├─ menu_actions.sh           # menu choice to command mapping
+      │  ├─ uninstall.sh              # complete uninstall flow
+      │  └─ update.sh                 # core/script/caddy update flow
+      ├─ domain
+      │  ├─ cli.sh                    # sb domain subcommands
+      │  ├─ health.sh                 # DNS/TCP/TLS health checks and cache
+      │  ├─ pick.sh                   # Reality SNI auto-pick
+      │  ├─ pool.sh                   # built-in/custom/disabled pool merge
+      │  └─ store.sh                  # local domain-pool file initialization
+      ├─ env
+      │  └─ defaults.sh               # protocols, change actions, built-in Reality domains
+      ├─ node
+      │  ├─ add.sh                    # add-node main flow
+      │  ├─ create.sh                 # sing-box JSON config writing
+      │  ├─ delete.sh                 # node config deletion
+      │  ├─ change.sh                 # change-node main flow
+      │  ├─ add/prepare.sh            # add-node parameter preparation
+      │  └─ change/actions.sh         # port/key/SNI and other change actions
+      ├─ query
+      │  ├─ info.sh                   # node information display
+      │  ├─ parse.sh                  # config reading and field parsing
+      │  ├─ protocol.sh               # protocol JSON fragment preparation
+      │  └─ url.sh                    # URL/QR/all-node output
+      ├─ runtime
+      │  ├─ cron.sh                   # automatic maintenance tasks
+      │  ├─ doctor.sh                 # system diagnostics
+      │  ├─ rollback.sh               # snapshot rollback
+      │  ├─ service.sh                # service start/stop/restart
+      │  └─ snapshot.sh               # snapshot create/list helpers
+      ├─ sub/generate.sh              # subscription generation
+      ├─ ui
+      │  ├─ output.sh                 # output, lists, pause, footer
+      │  └─ prompt.sh                 # protocol/config/common prompts
+      ├─ utils
+      │  ├─ bbr.sh                    # BBR enablement
+      │  ├─ dns.sh                    # DNS settings
+      │  ├─ download.sh               # version lookup and downloads
+      │  └─ log.sh                    # log viewing
+      └─ validate/input.sh            # domain, port, UUID, and path validation
 ```
 
 ### 5.1 Module Responsibility Quick Map
@@ -145,7 +186,7 @@ sb status
 - `src/core/runtime/`: diagnostics, snapshots, rollback, service, cron
 - `src/core/query/`: config parsing, node display, URL/QR output
 - `src/core/node/`: node add/change/delete flows
-- `src/core/admin/`: menu, CLI dispatch, update, uninstall
+- `src/core/admin/`: menu rendering, menu action mapping, CLI dispatch, update, uninstall
 - `src/core/env/`: constants, protocol lists, defaults
 - `src/core/ui/`: output, interactive prompts, pause, footer
 - `src/core/validate/`: input and port validation
@@ -153,7 +194,11 @@ sb status
 - `src/lib/`: shared install-time and runtime helper libraries
 - `src/core/utils/`: runtime utility helpers for download, BBR, logs, and DNS
 
-Note: legacy numbered modules have been removed. `src/core.sh` now loads the directory-based modules directly.
+Notes:
+
+- Legacy numbered modules have been removed. `src/core.sh` now loads directory-based modules directly.
+- The menu and command layers are separated: `menu.sh` only renders and reads choices, `menu_actions.sh` maps choices to commands, and `dispatch.sh` executes commands.
+- Add new behavior under the closest responsibility-based module instead of creating another large all-in-one file.
 
 ---
 

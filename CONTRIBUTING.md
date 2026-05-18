@@ -18,17 +18,24 @@ Thanks for helping improve Sing-box-EV.
 
 ## Core Module Layout
 
-- `src/core.sh`: compatibility wrappers and module loading.
-- `src/core/admin/`: menu/admin dispatch, update, uninstall.
-- `src/core/domain/`: Reality domain pool operations.
-- `src/core/env/`: shared constant arrays/defaults.
-- `src/core/node/`: create/change/delete flows.
-- `src/core/query/`: read/query/URL flows.
-- `src/core/runtime/`: runtime/service/doctor/snapshot operations.
+- `src/core.sh`: module loading order and compatibility wrappers.
+- `src/core/admin/`: menu rendering, menu action mapping, CLI dispatch, update, uninstall.
+- `src/core/domain/`: Reality domain pool storage, health checks, weighted pick logic, and CLI commands.
+- `src/core/env/`: shared protocol lists, change-action lists, defaults, and built-in Reality domains.
+- `src/core/node/`: create/add/change/delete write flows and protocol parameter preparation.
+- `src/core/query/`: config parsing, info display, URL/QR rendering, and all-node output.
+- `src/core/runtime/`: service control, cron, doctor diagnostics, snapshots, and rollback.
 - `src/core/sub/`: subscription generation.
-- `src/core/ui/`: UI and prompt helpers.
-- `src/core/validate/`: validation helpers.
-- `src/core/utils/`: runtime utility helpers.
+- `src/core/ui/`: output helpers and interactive prompt helpers.
+- `src/core/validate/`: input, domain, port, UUID, and path validation.
+- `src/core/utils/`: runtime utility helpers for download, BBR, logs, and DNS.
+- `src/lib/`: shared helpers used by both install-time and runtime flows.
+
+Admin layering rule:
+
+- `menu.sh` renders the menu and reads the user choice.
+- `menu_actions.sh` maps menu choices to command arguments.
+- `dispatch.sh` is the unified execution path for CLI and menu commands.
 
 ## Quality Checks
 

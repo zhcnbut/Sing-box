@@ -5,25 +5,32 @@ This folder contains the refactored core modules for the Sing-box-EV script.
 ## Module Map
 
 - `env/`
-  - Shared constant arrays and default random selectors.
+  - Protocol lists, change-action lists, default values, and built-in Reality domain pool.
 - `admin/`
-  - CLI/admin dispatch (`update`, `uninstall`, menu, `main` dispatch).
+  - Menu rendering, menu action mapping, CLI dispatch, update, and uninstall.
 - `domain/`
-  - Reality domain pool management, health checks, weighted selection.
+  - Reality domain pool storage, health checks, weighted selection, recent-use avoidance, and `sb domain` CLI.
 - `node/`
-  - Write/mutate flows (`create`, `add`, `change`, `del`).
+  - Write/mutate flows: create, add, change, delete, plus protocol parameter preparation.
 - `query/`
-  - Read/query flows (`get`, `info`, `url`, list all nodes).
+  - Read/query flows: parse configs, show info, render URLs/QR, and list all nodes.
 - `runtime/`
-  - Runtime/service operations (`manage`, `cron`, `doctor`, snapshot/rollback).
+  - Runtime/service operations: service control, cron, doctor, snapshot, rollback.
 - `sub/`
   - Subscription generation flow.
 - `ui/`
-  - UI output and interactive prompt helpers.
+  - UI output, list rendering, pause, footer, and interactive prompt helpers.
 - `validate/`
-  - Input and port validation helpers.
+  - Input, domain, port, UUID, and path validation helpers.
 - `utils/`
   - Runtime utilities such as download, BBR, log, and DNS helpers.
+
+## Admin Layering
+
+- `admin/menu.sh`: renders the main menu and reads the selected number.
+- `admin/menu_actions.sh`: maps menu selections to command arguments.
+- `admin/dispatch.sh`: executes both CLI commands and menu commands through one dispatch path.
+- Keep menu presentation separate from business operations. Menu code should not call node/runtime/query functions directly.
 
 ## Compatibility Rule
 
