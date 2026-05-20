@@ -5,7 +5,7 @@ admin_is_main_menu() {
     while :; do
         clear
         echo -e "\e[96m=====================================================\e[0m"
-        echo -e "\e[96m              Sing-box-EV 管理面板 $is_sh_ver\e[0m"
+        echo -e "\e[96m     Sing-box-EV 管理面板 $is_sh_ver  |  快捷启动: sb\e[0m"
         echo -e "\e[96m=====================================================\e[0m"
 
         local caddy_show=""

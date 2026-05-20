@@ -12,10 +12,16 @@ ui_pause() {
 }
 
 ui_show_list() {
-    PS3=''
-    COLUMNS=1
-    select i in "$@"; do echo; done &
-    wait
+    local index=1 item
+    for item in "$@"; do
+        if [[ $index -lt 10 ]]; then
+            echo "($index)  $item"
+        else
+            echo "($index) $item"
+        fi
+        ((index++))
+    done
+    echo
 }
 
 ui_footer_msg() {

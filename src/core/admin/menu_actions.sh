@@ -20,6 +20,37 @@ admin_menu_run_update_action() {
     esac
 }
 
+admin_menu_ask_advanced_action() {
+    msg "\n请选择进阶工具:\n"
+    msg "(1)  节点订阅(Sub)"
+    msg "(2)  查看全部节点"
+    msg "(3)  启用BBR"
+    msg "(4)  查看日志"
+    msg "(5)  测试运行"
+    msg "(6)  重装脚本"
+    msg "(7)  设置DNS"
+    msg "(8)  手动更新"
+    msg "(9)  系统诊断(doctor)"
+    msg "(10) 查看快照列表"
+    msg "(11) 手动创建快照"
+    msg "(12) 回滚快照"
+
+    while :; do
+        echo -ne "\n➡️ 请输入对应的数字 \e[92m(输入 0 返回主面板)\e[0m: "
+        read REPLY
+        if [[ "$REPLY" == "0" ]]; then
+            echo -e "\n\e[33m已安全取消当前操作，正在返回主面板...\e[0m"
+            sleep 0.5
+            is_main_menu
+            exit 0
+        fi
+        if [[ "$REPLY" =~ ^([1-9]|1[0-2])$ ]]; then
+            break
+        fi
+        msg "输入${is_err}"
+    done
+}
+
 admin_menu_run_advanced_action() {
     case $1 in
         1) admin_menu_run sub ;;
@@ -60,7 +91,7 @@ admin_menu_run_main_action() {
             admin_menu_run help
             ;;
         9)
-            ask list is_do_other "节点订阅(Sub) 一键查看所有节点信息 启用BBR 查看日志 测试运行 重装脚本 设置DNS 手动更新 系统诊断(doctor) 查看快照列表 手动创建快照 回滚快照" "" "\n请选择进阶工具:"
+            admin_menu_ask_advanced_action
             admin_menu_run_advanced_action "$REPLY"
             ;;
         10) admin_menu_run about ;;

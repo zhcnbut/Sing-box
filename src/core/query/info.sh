@@ -120,7 +120,6 @@ query_info() {
 
     if [[ $is_show_all ]]; then
         echo -e "\e[4;${is_color}m${is_url}\e[0m"
-        echo -e "\e[90m-----------------------------------------------------\e[0m"
         return
     fi
 
