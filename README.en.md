@@ -300,13 +300,13 @@ If you extend selection strategy, prioritize adding it under `src/core/domain/` 
 
 - Workflow: `.github/workflows/release.yml`
 - Version source: `is_sh_ver` in `src/init.sh`
-- Release body source: the matching version section in `RELEASE_NOTES.md`
+- Release body source: the matching version's `### 主要变化` section in `RELEASE_NOTES.md`
 - Auto-release runs when version tag is new
 
 Before release, verify:
 
 1. `is_sh_ver` is updated
-2. `RELEASE_NOTES.md` contains notes for the target version
+2. `RELEASE_NOTES.md` contains `### 主要变化` for the target version
 3. local lint/smoke checks pass
 4. README/help docs reflect behavior
 5. VPS regression checklist has been run as appropriate for the risk level
